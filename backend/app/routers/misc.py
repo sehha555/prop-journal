@@ -1,9 +1,9 @@
-"""expenses / certificates / setups / contracts。"""
+"""expenses（含 payout 收入）/ setups / contracts。"""
 
 from fastapi import APIRouter
 
 from ..contracts import POINT_VALUE
-from ..models import CertificateIn, ExpenseIn, SetupIn
+from ..models import ExpenseIn, SetupIn
 from . import crud
 
 router = APIRouter(prefix="/api", tags=["misc"])
@@ -22,21 +22,6 @@ def create_expense(body: ExpenseIn):
 @router.delete("/expenses/{row_id}")
 def delete_expense(row_id: int):
     return crud.delete_row("expenses", row_id)
-
-
-@router.get("/certificates")
-def list_certificates():
-    return crud.list_rows("certificates", "date DESC, id DESC")
-
-
-@router.post("/certificates")
-def create_certificate(body: CertificateIn):
-    return crud.insert_row("certificates", body.model_dump())
-
-
-@router.delete("/certificates/{row_id}")
-def delete_certificate(row_id: int):
-    return crud.delete_row("certificates", row_id)
 
 
 @router.get("/setups")

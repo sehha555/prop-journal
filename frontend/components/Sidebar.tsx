@@ -19,16 +19,6 @@ const NAV = [
   { href: "/trades/", label: "交易", icon: <path d="M2 4h12M2 8h12M2 12h8" /> },
   { href: "/stats/", label: "統計", icon: <path d="M2 13h12M4 11V7M8 11V3M12 11V6" /> },
   {
-    href: "/wall/",
-    label: "證書牆",
-    icon: (
-      <>
-        <rect x="2" y="3" width="12" height="10" rx="1" />
-        <path d="M5 8h6M5 10.5h3" />
-      </>
-    ),
-  },
-  {
     href: "/expenses/",
     label: "費用",
     icon: (

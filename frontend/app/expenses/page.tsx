@@ -1,5 +1,5 @@
 "use client";
-// 費用：表格 + 新增表單 + 刪除
+// 收支：費用與出金同一張表；payout 是收入，其餘是支出
 import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import ErrorBar from "@/components/ui/ErrorBar";
@@ -59,18 +59,20 @@ export default function ExpensesPage() {
     return a ? `${a.firm} · ${a.name}` : `#${id}`;
   };
 
-  const total = rows?.reduce((s, r) => s + r.amount, 0) ?? 0;
-  const monthly = rows?.filter((r) => r.kind === "subscription").reduce((s, r) => s + r.amount, 0) ?? 0;
+  const spent = rows?.filter((r) => r.kind !== "payout").reduce((s, r) => s + r.amount, 0) ?? 0;
+  const paidOut = rows?.filter((r) => r.kind === "payout").reduce((s, r) => s + r.amount, 0) ?? 0;
+  const net = paidOut - spent;
   const sorted = rows ? [...rows].sort((a, b) => b.date.localeCompare(a.date)) : [];
 
   return (
     <>
-      <PageHeader title="費用" subtitle={rows ? `${rows.length} 筆` : "載入中…"} />
+      <PageHeader title="收支" subtitle={rows ? `${rows.length} 筆` : "載入中…"} />
       <ErrorBar message={err ?? accErr} onClose={() => setErr(null)} />
 
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard label="總花費" value={fmtMoney(total)} hint="所有費用加總" />
-        <StatCard label="月費合計" value={fmtMoney(monthly)} hint="kind = subscription 的加總" />
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="總花費" value={fmtMoney(spent)} hint="eval、reset、啟用、月費、其他" />
+        <StatCard label="已出金" value={fmtMoney(paidOut)} hint="payout 加總" />
+        <StatCard label="淨利" value={fmtMoney(net, { sign: true })} hint="已出金 − 總花費" accent />
       </div>
 
       {/* 新增表單 */}
@@ -120,7 +122,7 @@ export default function ExpensesPage() {
                 <td className="py-2 pr-2">{r.date}</td>
                 <td className="py-2 pr-2 text-muted">{accountLabel(r.account_id)}</td>
                 <td className="py-2 pr-2">{EXPENSE_KIND_LABEL[r.kind] ?? r.kind}</td>
-                <td className="py-2 pr-2 text-right">{fmtMoney(r.amount, { decimals: 2 })}</td>
+                <td className={`py-2 pr-2 text-right ${r.kind === "payout" ? "text-green" : ""}`}>{r.kind === "payout" ? "+" : "-"}{fmtMoney(r.amount, { decimals: 2 })}</td>
                 <td className="py-2 pr-2 text-muted">{r.note ?? ""}</td>
                 <td className="py-2 text-right">
                   <button type="button" className="btn btn-sm btn-danger opacity-0 group-hover:opacity-100" onClick={() => remove(r.id)}>刪除</button>
@@ -129,7 +131,7 @@ export default function ExpensesPage() {
             ))}
           </tbody>
         </table>
-        {rows && rows.length === 0 && <Empty>還沒有費用紀錄</Empty>}
+        {rows && rows.length === 0 && <Empty>還沒有收支紀錄</Empty>}
       </div>
     </>
   );

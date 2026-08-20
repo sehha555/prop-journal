@@ -1,4 +1,4 @@
-"""accounts / expenses / certificates / setups 的簡單 CRUD 共用寫法。"""
+"""accounts / expenses / setups 的簡單 CRUD 共用寫法。"""
 
 from fastapi import HTTPException
 

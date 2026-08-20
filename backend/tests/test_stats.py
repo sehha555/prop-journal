@@ -81,7 +81,7 @@ def test_filters_by_date(seeded):
 def test_dashboard(seeded, account):
     seeded.post("/api/expenses", json={"kind": "eval", "amount": 149, "date": "2026-08-01"})
     seeded.post("/api/expenses", json={"kind": "subscription", "amount": 165, "date": "2026-08-01"})
-    seeded.post("/api/certificates", json={"account_id": account["id"], "kind": "payout", "amount": 1000, "date": "2026-08-10"})
+    seeded.post("/api/expenses", json={"account_id": account["id"], "kind": "payout", "amount": 1000, "date": "2026-08-10"})
     d = seeded.get("/api/dashboard").json()
     assert d["totals"] == {"spent": 314, "monthly_recurring": 165, "paid_out": 1000, "net": 686}
     a = d["accounts"][0]

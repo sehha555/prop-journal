@@ -89,6 +89,7 @@ export const EXPENSE_KIND_LABEL: Record<string, string> = {
   activation: "啟用費",
   subscription: "月費",
   other: "其他",
+  payout: "出金",
 };
 
 export const SYMBOL_ROOTS = ["NQ", "MNQ", "ES", "MES"];

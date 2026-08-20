@@ -36,7 +36,6 @@ def dashboard():
         accounts = [dict(r) for r in c.execute("SELECT * FROM accounts ORDER BY id")]
         trades = fetch_trades(c, Filters())
         expenses = [dict(r) for r in c.execute("SELECT * FROM expenses")]
-        certs = [dict(r) for r in c.execute("SELECT * FROM certificates")]
         last_import = c.execute("SELECT MAX(imported_at) AS t FROM trades").fetchone()["t"]
 
     by_acc: dict[int, list[dict]] = {a["id"]: [] for a in accounts}
@@ -56,9 +55,9 @@ def dashboard():
             "last_trade_at": max((t["exit_time"] for t in ts), default=None),
         })
 
-    spent = sum(e["amount"] for e in expenses)
+    spent = sum(e["amount"] for e in expenses if e["kind"] != "payout")
     monthly = sum(e["amount"] for e in expenses if e["kind"] == "subscription")
-    paid_out = sum(cert["amount"] or 0 for cert in certs if cert["kind"] == "payout")
+    paid_out = sum(e["amount"] for e in expenses if e["kind"] == "payout")
 
     this_month = datetime.now(NY).strftime("%Y-%m")
     month_trades = [t for t in trades if t["ny_date"].startswith(this_month)]

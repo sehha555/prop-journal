@@ -40,24 +40,13 @@ export interface Trade {
   session: Session | null;
 }
 
-export type ExpenseKind = "eval" | "reset" | "activation" | "subscription" | "other";
+export type ExpenseKind = "eval" | "reset" | "activation" | "subscription" | "other" | "payout";
 
 export interface Expense {
   id: number;
   account_id: number | null;
   kind: ExpenseKind;
   amount: number;
-  date: string;
-  note: string | null;
-}
-
-export type CertificateKind = "eval_passed" | "payout";
-
-export interface Certificate {
-  id: number;
-  account_id: number;
-  kind: CertificateKind;
-  amount: number | null;
   date: string;
   note: string | null;
 }

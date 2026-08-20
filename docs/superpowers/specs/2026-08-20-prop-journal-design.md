@@ -7,8 +7,8 @@
 
 給期貨 prop firm 交易員（本人 + 朋友）用的交易日誌。三個核心：
 跨帳戶績效、prop firm 真實淨利（payout 減所有費用）、以 R 為單位的
-consistency 統計。靈感來源 myfundedbook.com，取其功能 1 / 4 / 5，
-捨棄每週回顧、紀律風控頁。
+consistency 統計。靈感來源 myfundedbook.com，取其功能 1 / 5，
+捨棄每週回顧、紀律風控頁、證書牆（只要知道花多少賺多少）。
 
 ## 不做的事（YAGNI）
 
@@ -46,7 +46,6 @@ prop-journal/
         accounts.py
         trades.py      CSV 匯入 + journal 補欄
         expenses.py
-        certificates.py
         stats.py       所有統計計算的 API
       importers/
         base.py        Importer 介面：parse(file) -> list[TradeIn]
@@ -62,7 +61,6 @@ prop-journal/
       page.tsx         Dashboard
       trades/          匯入 + 表格 + journal 側欄
       stats/           三個 tab：績效 / 時段 / consistency
-      wall/            證書牆
       expenses/
     store/             Zustand
   start.command
@@ -98,11 +96,8 @@ trades
 
 expenses
   id, account_id (可 NULL，代表不綁帳戶的通用費), kind
-  (eval|reset|activation|subscription|other), amount, date, note
-
-certificates
-  id, account_id, kind (eval_passed|payout), amount (payout 才有),
-  date, image_path (可 NULL), note
+  (eval|reset|activation|subscription|other|payout), amount, date, note
+  payout 是收入（出金），其餘是支出
 
 setups
   id, name, description   (下拉用的標籤表，使用者自己維護)
@@ -161,8 +156,7 @@ NY AM 09:30-12:00、NY PM 12:00-16:00、其他歸 Off-hours。
 2. **Trades**：上方匯入區（選帳戶 + 拖 CSV）、表格、點一列開右側
    journal 欄補停損 / setup / 備註，儲存即重算 R
 3. **Stats**：三個 tab（績效 / 時段 / consistency），共用篩選列
-4. **Wall**：證書卡片牆，上方兩個總數（funded 資金、累計出金）
-5. **Expenses**：表格 + 新增表單
+4. **Expenses（收支）**：費用與出金同一張表 + 新增表單，上方三個數字：總花費、已出金、淨利
 
 視覺方向由 /design 另出 mockup，本文件不定色盤與排版。
 
@@ -184,4 +178,4 @@ NY AM 09:30-12:00、NY PM 12:00-16:00、其他歸 Off-hours。
 
 1. 雙擊 start.command 開得起來
 2. 匯入 TopstepX CSV → 補 5 筆停損 → Stats 三個 tab 有數字且與手算一致
-3. 新增一筆 eval 費 + 一張 payout 證書 → Dashboard 淨利對
+3. 新增一筆 eval 費 + 一筆 payout → Dashboard 淨利對

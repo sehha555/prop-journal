@@ -50,17 +50,8 @@ CREATE INDEX IF NOT EXISTS idx_trades_exit ON trades(exit_time);
 CREATE TABLE IF NOT EXISTS expenses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER REFERENCES accounts(id) ON DELETE SET NULL,
-    kind TEXT NOT NULL CHECK (kind IN ('eval','reset','activation','subscription','other')),
+    kind TEXT NOT NULL CHECK (kind IN ('eval','reset','activation','subscription','other','payout')),
     amount REAL NOT NULL,
-    date TEXT NOT NULL,
-    note TEXT
-);
-
-CREATE TABLE IF NOT EXISTS certificates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
-    kind TEXT NOT NULL CHECK (kind IN ('eval_passed','payout')),
-    amount REAL,
     date TEXT NOT NULL,
     note TEXT
 );

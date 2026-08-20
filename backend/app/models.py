@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 Kind = Literal["eval", "funded"]
 Status = Literal["active", "passed", "failed", "closed"]
 Direction = Literal["long", "short"]
-ExpenseKind = Literal["eval", "reset", "activation", "subscription", "other"]
-CertKind = Literal["eval_passed", "payout"]
+# payout 是收入，其餘是支出
+ExpenseKind = Literal["eval", "reset", "activation", "subscription", "other", "payout"]
 
 
 class AccountIn(BaseModel):
@@ -60,14 +60,6 @@ class ExpenseIn(BaseModel):
     account_id: Optional[int] = None
     kind: ExpenseKind
     amount: float = Field(gt=0)
-    date: str
-    note: Optional[str] = None
-
-
-class CertificateIn(BaseModel):
-    account_id: int
-    kind: CertKind
-    amount: Optional[float] = None
     date: str
     note: Optional[str] = None
 

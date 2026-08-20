@@ -27,11 +27,10 @@ planned_stop_pts, setup, note, risk_usd, r_multiple, session}`
 
 session ∈ `"asia"|"london"|"ny_am"|"ny_pm"|"off"`
 
-## expenses / certificates / setups
+## expenses / setups
 - `GET|POST /api/expenses`，`DELETE /api/expenses/{id}`
-  Expense = `{id, account_id|null, kind: "eval"|"reset"|"activation"|"subscription"|"other", amount, date, note}`
-- `GET|POST /api/certificates`，`DELETE /api/certificates/{id}`
-  Certificate = `{id, account_id, kind: "eval_passed"|"payout", amount|null, date, note}`（v1 不做圖片）
+  Expense = `{id, account_id|null, kind: "eval"|"reset"|"activation"|"subscription"|"other"|"payout", amount, date, note}`
+  `payout` 是收入（出金），其餘是支出；dashboard 的 `paid_out` 與 `spent` 由此分開加總
 - `GET|POST /api/setups`，`DELETE /api/setups/{id}`  Setup = `{id, name, description}`
 - `GET /api/contracts` → `{"NQ": 20, "MNQ": 2, "ES": 50, "MES": 5}`
 
