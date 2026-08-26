@@ -1,5 +1,5 @@
 "use client";
-// 右側滑出的 journal 欄：補停損 / setup / 備註，存檔後後端重算 R
+// 右側滑出的 journal 欄：補停損 / MFE / MAE / setup / 備註，存檔後後端重算 R
 import { useState } from "react";
 import Field from "@/components/ui/Field";
 import { apiSend, errorMessage } from "@/lib/api";
@@ -22,6 +22,8 @@ export default function JournalDrawer({
   const setupsErr = useEnsureSetups();
   // 父層用 key={trade.id} 重掛，所以初始值直接從 trade 來
   const [stop, setStop] = useState(trade?.planned_stop_pts != null ? String(trade.planned_stop_pts) : "");
+  const [mfe, setMfe] = useState(trade?.mfe_pts != null ? String(trade.mfe_pts) : "");
+  const [mae, setMae] = useState(trade?.mae_pts != null ? String(trade.mae_pts) : "");
   const [setup, setSetup] = useState(trade?.setup ?? "");
   const [newSetup, setNewSetup] = useState("");
   const [note, setNote] = useState(trade?.note ?? "");
@@ -36,6 +38,12 @@ export default function JournalDrawer({
     const stopNum = stop === "" ? null : Number(stop);
     if (stopNum !== null && !(stopNum > 0)) {
       setErr("計畫停損必須大於 0");
+      return;
+    }
+    const mfeNum = mfe === "" ? null : Number(mfe);
+    const maeNum = mae === "" ? null : Number(mae);
+    if ((mfeNum !== null && mfeNum < 0) || (maeNum !== null && maeNum < 0)) {
+      setErr("MFE / MAE 填正數（點）");
       return;
     }
     setSaving(true);
@@ -54,6 +62,8 @@ export default function JournalDrawer({
       }
       const updated = await apiSend<Trade>("PATCH", `/trades/${trade.id}`, {
         planned_stop_pts: stopNum,
+        mfe_pts: mfeNum,
+        mae_pts: maeNum,
         setup: setupName,
         note: note || null,
       });
@@ -94,6 +104,14 @@ export default function JournalDrawer({
         <Field label="計畫停損（點）">
           <input className="input num" type="number" min="0" step="any" value={stop} onChange={(e) => setStop(e.target.value)} placeholder="例 20" />
         </Field>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="最大浮盈 MFE（點）">
+            <input className="input num" type="number" min="0" step="any" value={mfe} onChange={(e) => setMfe(e.target.value)} placeholder="例 35" />
+          </Field>
+          <Field label="最大浮虧 MAE（點）">
+            <input className="input num" type="number" min="0" step="any" value={mae} onChange={(e) => setMae(e.target.value)} placeholder="例 8" />
+          </Field>
+        </div>
         <Field label="Setup">
           <select className="input" value={setup} onChange={(e) => setSetup(e.target.value)}>
             <option value="">— 未標 —</option>

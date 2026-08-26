@@ -40,3 +40,17 @@ def test_journal_patch_computes_r(client, account):
     assert body["risk_usd"] == 20
     assert round(body["r_multiple"], 3) == 1.926
     assert len(client.get("/api/trades", params={"missing_r": 1}).json()) == 2
+
+
+def test_mfe_mae_patch_and_stats(client, account):
+    files = {"file": ("t.csv", SAMPLE.read_bytes(), "text/csv")}
+    client.post("/api/trades/import", data={"account_id": account["id"]}, files=files)
+    t = client.get("/api/trades").json()[0]
+    r = client.patch(f"/api/trades/{t['id']}", json={"mfe_pts": 40, "mae_pts": 5})
+    assert r.json()["mfe_pts"] == 40 and r.json()["mae_pts"] == 5
+    ex = client.get("/api/stats/performance").json()["excursion"]
+    assert ex["with_mfe"] == 1 and ex["with_mae"] == 1
+    assert ex["avg_mae_pts"] == 5 and ex["max_mae_pts"] == 5
+    # 拿到的點數 / 最大浮盈 40 點
+    got = (t["exit_price"] - t["entry_price"]) if t["direction"] == "long" else (t["entry_price"] - t["exit_price"])
+    assert ex["mfe_capture_pct"] == round(got / 40 * 100, 1)

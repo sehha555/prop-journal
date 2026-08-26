@@ -27,6 +27,12 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
         } />
         <StatCard size="md" label="單日最佳獲利佔比" value={fmtPct(d?.best_day_pct)} hint="出金規則常見上限 50%，僅顯示不警示" />
       </div>
+      <div className="grid grid-cols-4 gap-3">
+        <StatCard size="md" label="平均最大浮盈 MFE" value={d?.excursion.avg_mfe_pts != null ? `${fmtNum(d.excursion.avg_mfe_pts)} 點` : "—"} valueClass="text-green" hint={d ? `${d.excursion.with_mfe} / ${d.trade_count} 筆有填` : undefined} />
+        <StatCard size="md" label="平均最大浮虧 MAE" value={d?.excursion.avg_mae_pts != null ? `${fmtNum(d.excursion.avg_mae_pts)} 點` : "—"} valueClass="text-red" hint={d ? `${d.excursion.with_mae} / ${d.trade_count} 筆有填` : undefined} />
+        <StatCard size="md" label="最深浮虧" value={d?.excursion.max_mae_pts != null ? `${fmtNum(d.excursion.max_mae_pts)} 點` : "—"} valueClass="text-red" hint="停損擺哪的參考" />
+        <StatCard size="md" label="MFE 兌現率" value={fmtPct(d?.excursion.mfe_capture_pct)} hint="實拿點數 / 最大浮盈，低表示常吐回去" />
+      </div>
       <div className="card flex grow flex-col gap-2 px-[18px] py-4">
         <div className="flex items-baseline justify-between">
           <div className="text-[14px] font-bold text-white">權益曲線</div>

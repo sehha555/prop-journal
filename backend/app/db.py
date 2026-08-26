@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS trades (
     commissions REAL NOT NULL DEFAULT 0,
     fees REAL NOT NULL DEFAULT 0,
     planned_stop_pts REAL,
+    mfe_pts REAL,
+    mae_pts REAL,
     setup TEXT,
     note TEXT,
     risk_usd REAL,
@@ -63,6 +65,9 @@ CREATE TABLE IF NOT EXISTS setups (
 );
 """
 
+# 後加的欄位：舊資料庫用 ALTER TABLE 補上（CREATE IF NOT EXISTS 不會動既有表）
+ADDED_COLUMNS = [("trades", "mfe_pts", "REAL"), ("trades", "mae_pts", "REAL")]
+
 
 def init_db(path: Path | None = None) -> None:
     path = path or DB_PATH
@@ -70,6 +75,10 @@ def init_db(path: Path | None = None) -> None:
     with sqlite3.connect(path) as conn:
         conn.execute("PRAGMA foreign_keys = ON")
         conn.executescript(SCHEMA)
+        for table, col, typ in ADDED_COLUMNS:
+            have = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+            if col not in have:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
 
 
 @contextmanager

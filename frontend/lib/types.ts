@@ -33,6 +33,8 @@ export interface Trade {
   commissions: number;
   fees: number;
   planned_stop_pts: number | null;
+  mfe_pts: number | null;
+  mae_pts: number | null;
   setup: string | null;
   note: string | null;
   risk_usd: number | null;
@@ -108,6 +110,14 @@ export interface PerformanceStats {
   max_loss: number | null;
   max_drawdown: number | null;
   best_day_pct: number | null;
+  excursion: {
+    with_mfe: number;
+    with_mae: number;
+    avg_mfe_pts: number | null;
+    avg_mae_pts: number | null;
+    max_mae_pts: number | null;
+    mfe_capture_pct: number | null;
+  };
   equity: EquityPoint[];
 }
 
