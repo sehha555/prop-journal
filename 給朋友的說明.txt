@@ -1,0 +1,11 @@
+prop-journal 使用說明
+
+Windows：
+1. 到 Microsoft Store 搜「Python 3.12」按安裝（只做一次）
+2. 雙擊 start.bat，第一次會等 1-2 分鐘裝東西，之後幾秒就開
+3. 瀏覽器會自動開 http://localhost:8000；沒開就自己貼網址
+4. 關掉：關掉那個黑色視窗
+
+Mac：雙擊 start.command（第一次若被擋，右鍵 → 打開）
+
+資料存在 backend/data/journal.db，換電腦把這個檔帶走即可。
