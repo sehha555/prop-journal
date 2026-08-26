@@ -1,10 +1,12 @@
 """SQLite 連線與 schema。stdlib sqlite3，不用 ORM。"""
 
 import sqlite3
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+# 打包成 exe（PyInstaller）時，資料放 exe 旁邊，重開或改版都還在
+ROOT = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "data" / "journal.db"
 
 SCHEMA = """

@@ -1,11 +1,9 @@
 prop-journal 使用說明
 
-Windows：
-1. 到 Microsoft Store 搜「Python 3.12」按安裝（只做一次）
-2. 雙擊 start.bat，第一次會等 1-2 分鐘裝東西，之後幾秒就開
+1. 把整個資料夾解壓到任何地方（例如桌面）
+2. 雙擊 prop-journal.exe
+   Windows 若跳「Windows 已保護您的電腦」→ 點「其他資訊」→「仍要執行」（只有第一次）
 3. 瀏覽器會自動開 http://localhost:8000；沒開就自己貼網址
 4. 關掉：關掉那個黑色視窗
 
-Mac：雙擊 start.command（第一次若被擋，右鍵 → 打開）
-
-資料存在 backend/data/journal.db，換電腦把這個檔帶走即可。
+交易資料存在同資料夾的 data/journal.db，換電腦或更新版本時把這個檔帶走即可。

@@ -1,5 +1,6 @@
 """FastAPI 入口。正式模式同時 serve frontend/out 靜態檔。"""
 
+import sys
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -8,7 +9,10 @@ from fastapi.staticfiles import StaticFiles
 from .db import init_db
 from .routers import accounts, misc, stats, trades
 
-FRONTEND_OUT = Path(__file__).resolve().parents[2] / "frontend" / "out"
+if getattr(sys, "frozen", False):
+    FRONTEND_OUT = Path(sys._MEIPASS) / "frontend_out"  # 打包時由 build.spec 塞進來
+else:
+    FRONTEND_OUT = Path(__file__).resolve().parents[2] / "frontend" / "out"
 
 app = FastAPI(title="prop-journal")
 init_db()
