@@ -49,6 +49,7 @@ class TradeIn(BaseModel):
     # 持倉期間最大浮盈 / 最大浮虧（點，正數）。目前手動填；之後接行情 API 也寫這兩欄
     mfe_pts: Optional[float] = Field(default=None, ge=0)
     mae_pts: Optional[float] = Field(default=None, ge=0)
+    moved_to_be: bool = False  # 有推停損到保本
     setup: Optional[str] = None
     note: Optional[str] = None
 
@@ -57,6 +58,7 @@ class TradePatch(BaseModel):
     planned_stop_pts: Optional[float] = Field(default=None, gt=0)
     mfe_pts: Optional[float] = Field(default=None, ge=0)
     mae_pts: Optional[float] = Field(default=None, ge=0)
+    moved_to_be: Optional[bool] = None
     setup: Optional[str] = None
     note: Optional[str] = None
 

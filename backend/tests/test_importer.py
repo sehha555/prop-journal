@@ -54,3 +54,18 @@ def test_mfe_mae_patch_and_stats(client, account):
     # 拿到的點數 / 最大浮盈 40 點
     got = (t["exit_price"] - t["entry_price"]) if t["direction"] == "long" else (t["entry_price"] - t["exit_price"])
     assert ex["mfe_capture_pct"] == round(got / 40 * 100, 1)
+
+
+def test_moved_to_be_stats(client, account):
+    files = {"file": ("t.csv", SAMPLE.read_bytes(), "text/csv")}
+    client.post("/api/trades/import", data={"account_id": account["id"]}, files=files)
+    trades = client.get("/api/trades").json()
+    assert trades[0]["moved_to_be"] == 0
+    loser = next(t for t in trades if t["pnl"] < 0)
+    client.patch(f"/api/trades/{loser['id']}", json={"moved_to_be": True, "mfe_pts": 12})
+    ex = client.get("/api/stats/performance").json()["excursion"]
+    assert ex["be_count"] == 1 and ex["be_stopped"] == 1 and ex["be_stopped_avg_mfe_pts"] == 12
+
+    # 取消勾選也要寫得回去（False 不能被當成「沒改」）
+    r = client.patch(f"/api/trades/{loser['id']}", json={"moved_to_be": False})
+    assert r.json()["moved_to_be"] == 0

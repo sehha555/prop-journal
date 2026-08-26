@@ -35,6 +35,7 @@ export interface Trade {
   planned_stop_pts: number | null;
   mfe_pts: number | null;
   mae_pts: number | null;
+  moved_to_be: 0 | 1;
   setup: string | null;
   note: string | null;
   risk_usd: number | null;
@@ -117,6 +118,9 @@ export interface PerformanceStats {
     avg_mae_pts: number | null;
     max_mae_pts: number | null;
     mfe_capture_pct: number | null;
+    be_count: number;
+    be_stopped: number;
+    be_stopped_avg_mfe_pts: number | null;
   };
   equity: EquityPoint[];
 }

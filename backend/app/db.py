@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS trades (
     planned_stop_pts REAL,
     mfe_pts REAL,
     mae_pts REAL,
+    moved_to_be INTEGER NOT NULL DEFAULT 0,
     setup TEXT,
     note TEXT,
     risk_usd REAL,
@@ -66,7 +67,8 @@ CREATE TABLE IF NOT EXISTS setups (
 """
 
 # 後加的欄位：舊資料庫用 ALTER TABLE 補上（CREATE IF NOT EXISTS 不會動既有表）
-ADDED_COLUMNS = [("trades", "mfe_pts", "REAL"), ("trades", "mae_pts", "REAL")]
+ADDED_COLUMNS = [("trades", "mfe_pts", "REAL"), ("trades", "mae_pts", "REAL"),
+                 ("trades", "moved_to_be", "INTEGER NOT NULL DEFAULT 0")]
 
 
 def init_db(path: Path | None = None) -> None:

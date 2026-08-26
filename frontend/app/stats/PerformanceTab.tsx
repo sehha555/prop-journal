@@ -33,6 +33,10 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
         <StatCard size="md" label="最深浮虧" value={d?.excursion.max_mae_pts != null ? `${fmtNum(d.excursion.max_mae_pts)} 點` : "—"} valueClass="text-red" hint="停損擺哪的參考" />
         <StatCard size="md" label="MFE 兌現率" value={fmtPct(d?.excursion.mfe_capture_pct)} hint="實拿點數 / 最大浮盈，低表示常吐回去" />
       </div>
+      <div className="grid grid-cols-4 gap-3">
+        <StatCard size="md" label="推保本後被掃出場" value={d ? `${d.excursion.be_stopped} / ${d.excursion.be_count}` : "—"} hint="被掃 / 有推 BE 的筆數" />
+        <StatCard size="md" label="被掃那些原本的 MFE" value={d?.excursion.be_stopped_avg_mfe_pts != null ? `${fmtNum(d.excursion.be_stopped_avg_mfe_pts)} 點` : "—"} hint="平均，高表示推 BE 推太早" />
+      </div>
       <div className="card flex grow flex-col gap-2 px-[18px] py-4">
         <div className="flex items-baseline justify-between">
           <div className="text-[14px] font-bold text-white">權益曲線</div>

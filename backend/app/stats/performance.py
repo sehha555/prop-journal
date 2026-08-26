@@ -22,7 +22,14 @@ def excursion(trades: list[dict]) -> dict:
     mfe = [t["mfe_pts"] for t in trades if t["mfe_pts"] is not None]
     mae = [t["mae_pts"] for t in trades if t["mae_pts"] is not None]
     caps = [pnl_pts(t) / t["mfe_pts"] for t in trades if t["mfe_pts"]]
+    # 推保本後被掃出場（出場點數 <= 0）：看推 BE 是否推太早，附那些交易原本的平均 MFE
+    be = [t for t in trades if t["moved_to_be"]]
+    be_stopped = [t for t in be if pnl_pts(t) <= 0]
+    be_stopped_mfe = [t["mfe_pts"] for t in be_stopped if t["mfe_pts"] is not None]
     return {
+        "be_count": len(be),
+        "be_stopped": len(be_stopped),
+        "be_stopped_avg_mfe_pts": round(mean(be_stopped_mfe), 2) if be_stopped_mfe else None,
         "with_mfe": len(mfe),
         "with_mae": len(mae),
         "avg_mfe_pts": round(mean(mfe), 2) if mfe else None,

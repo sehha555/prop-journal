@@ -17,13 +17,13 @@ Account = `{id, firm, name, kind, starting_balance, profit_target, status, creat
 ## trades
 - `GET /api/trades?<篩選>&missing_r=1` → `[Trade]`（`missing_r=1` 只回沒補停損的）
 - `POST /api/trades` 手 key，body = Trade 去掉 id / 推導欄位
-- `PATCH /api/trades/{id}` body `{planned_stop_pts?, mfe_pts?, mae_pts?, setup?, note?}` → Trade（重算 R）
+- `PATCH /api/trades/{id}` body `{planned_stop_pts?, mfe_pts?, mae_pts?, moved_to_be?, setup?, note?}` → Trade（重算 R）
 - `DELETE /api/trades/{id}`
 - `POST /api/trades/import` multipart：`account_id`、`file` → `{added, skipped, importer: "topstepx"}`；認不出格式回 400 `{detail, known_importers}`
 
 Trade = `{id, account_id, external_id, contract, symbol_root, direction: "long"|"short", size,
 entry_time, exit_time (ISO UTC), entry_price, exit_price, pnl, commissions, fees,
-planned_stop_pts, mfe_pts, mae_pts, setup, note, risk_usd, r_multiple, session}`
+planned_stop_pts, mfe_pts, mae_pts, moved_to_be (0|1), setup, note, risk_usd, r_multiple, session}`
 
 `mfe_pts` / `mae_pts`：持倉期間最大浮盈 / 最大浮虧（點，正數）。目前手動填，之後接行情 API 也寫同兩欄。
 
@@ -55,7 +55,8 @@ session ∈ `"asia"|"london"|"ny_am"|"ny_pm"|"off"`
 ```
 { r_coverage, total_pnl, trade_count, win_rate, profit_factor, avg_win, avg_loss,
   max_win, max_loss, max_drawdown, best_day_pct,
-  excursion: {with_mfe, with_mae, avg_mfe_pts, avg_mae_pts, max_mae_pts, mfe_capture_pct},
+  excursion: {with_mfe, with_mae, avg_mfe_pts, avg_mae_pts, max_mae_pts, mfe_capture_pct,
+              be_count, be_stopped, be_stopped_avg_mfe_pts},  // 推保本筆數 / 其中被掃出場（出場點數<=0）
   equity: [{date, cum_pnl}] }
 ```
 
