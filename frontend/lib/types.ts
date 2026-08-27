@@ -121,8 +121,20 @@ export interface PerformanceStats {
     be_count: number;
     be_stopped: number;
     be_stopped_avg_mfe_pts: number | null;
+    trades: ExcursionTrade[];
   };
   equity: EquityPoint[];
+  daily: { date: string; pnl: number }[];
+}
+
+export interface ExcursionTrade {
+  id: number;
+  exit_time: string;
+  contract: string;
+  direction: "long" | "short";
+  mfe: number;
+  mae: number;
+  got: number;
 }
 
 export interface SliceRow {

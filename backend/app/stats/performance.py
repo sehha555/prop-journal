@@ -1,6 +1,6 @@
 """A 基本績效。"""
 
-from .common import best_day_pct, equity_curve, mean, r_coverage
+from .common import best_day_pct, daily_pnl, equity_curve, mean, r_coverage
 
 
 def max_drawdown(equity: list[dict]) -> float:
@@ -26,7 +26,13 @@ def excursion(trades: list[dict]) -> dict:
     be = [t for t in trades if t["moved_to_be"]]
     be_stopped = [t for t in be if pnl_pts(t) <= 0]
     be_stopped_mfe = [t["mfe_pts"] for t in be_stopped if t["mfe_pts"] is not None]
+    per_trade = [
+        {"id": t["id"], "exit_time": t["exit_time"], "contract": t["contract"], "direction": t["direction"],
+         "mfe": t["mfe_pts"], "mae": t["mae_pts"], "got": round(pnl_pts(t), 2)}
+        for t in trades if t["mfe_pts"] is not None and t["mae_pts"] is not None
+    ]
     return {
+        "trades": per_trade,
         "be_count": len(be),
         "be_stopped": len(be_stopped),
         "be_stopped_avg_mfe_pts": round(mean(be_stopped_mfe), 2) if be_stopped_mfe else None,
@@ -58,4 +64,5 @@ def compute(trades: list[dict]) -> dict:
         "best_day_pct": best_day_pct(trades),
         "excursion": excursion(trades),
         "equity": eq,
+        "daily": [{"date": d, "pnl": round(v, 2)} for d, v in daily_pnl(trades).items()],
     }

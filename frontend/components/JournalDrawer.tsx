@@ -44,7 +44,7 @@ export default function JournalDrawer({
     const mfeNum = mfe === "" ? null : Number(mfe);
     const maeNum = mae === "" ? null : Number(mae);
     if ((mfeNum !== null && mfeNum < 0) || (maeNum !== null && maeNum < 0)) {
-      setErr("MFE / MAE 填正數（點）");
+      setErr("最多曾賺 / 曾賠填正數（點）");
       return;
     }
     setSaving(true);
@@ -107,10 +107,10 @@ export default function JournalDrawer({
           <input className="input num" type="number" min="0" step="any" value={stop} onChange={(e) => setStop(e.target.value)} placeholder="例 20" />
         </Field>
         <div className="grid grid-cols-2 gap-2">
-          <Field label="最大浮盈 MFE（點）">
+          <Field label="最多曾賺（點）">
             <input className="input num" type="number" min="0" step="any" value={mfe} onChange={(e) => setMfe(e.target.value)} placeholder="例 35" />
           </Field>
-          <Field label="最大浮虧 MAE（點）">
+          <Field label="最多曾賠（點）">
             <input className="input num" type="number" min="0" step="any" value={mae} onChange={(e) => setMae(e.target.value)} placeholder="例 8" />
           </Field>
         </div>

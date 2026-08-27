@@ -57,8 +57,9 @@ session ∈ `"asia"|"london"|"ny_am"|"ny_pm"|"off"`
 { r_coverage, total_pnl, trade_count, win_rate, profit_factor, avg_win, avg_loss,
   max_win, max_loss, max_drawdown, best_day_pct,
   excursion: {with_mfe, with_mae, avg_mfe_pts, avg_mae_pts, max_mae_pts, mfe_capture_pct,
-              be_count, be_stopped, be_stopped_avg_mfe_pts},  // 推保本筆數 / 其中被掃出場（出場點數<=0）
-  equity: [{date, cum_pnl}] }
+              be_count, be_stopped, be_stopped_avg_mfe_pts,   // 推保本筆數 / 其中被掃出場（出場點數<=0）
+              trades: [{id, exit_time, contract, direction, mfe, mae, got}]},  // 有 MFE/MAE 的每筆，got = 實拿點數
+  equity: [{date, cum_pnl}], daily: [{date, pnl}] }
 ```
 
 `GET /api/stats/sessions` →
