@@ -18,10 +18,10 @@ def pnl_pts(t: dict) -> float:
 
 def excursion(trades: list[dict]) -> dict:
     """MFE / MAE（點）。只算有填的交易；不同合約點數不通用，篩單一 symbol 看才準。
-    mfe_capture_pct = 實際拿到的點數 / 最大浮盈，看是否常把浮盈吐回去。"""
+    mfe_capture_pct = 獲利單實拿點數 / 最多曾賺，看是否常把浮盈吐回去（只算獲利單）。"""
     mfe = [t["mfe_pts"] for t in trades if t["mfe_pts"] is not None]
     mae = [t["mae_pts"] for t in trades if t["mae_pts"] is not None]
-    caps = [pnl_pts(t) / t["mfe_pts"] for t in trades if t["mfe_pts"]]
+    caps = [pnl_pts(t) / t["mfe_pts"] for t in trades if t["mfe_pts"] and pnl_pts(t) > 0]
     # 推保本後被掃出場（出場點數 <= 0）：看推 BE 是否推太早，附那些交易原本的平均 MFE
     be = [t for t in trades if t["moved_to_be"]]
     be_stopped = [t for t in be if pnl_pts(t) <= 0]

@@ -48,7 +48,7 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
       </div>
       <Panel
         title="持倉過程"
-        hint={ex ? `綠柱 = 最多曾賺 · 紅柱 = 最多曾賠 · 白點 = 實際拿到（點）· 賺到手 ${fmtPct(ex.mfe_capture_pct)} · ${ex.with_mfe} / ${d?.trade_count} 筆有資料` : undefined}
+        hint={ex ? `綠柱 = 最多曾賺 · 紅柱 = 最多曾賠 · 白點 = 實際拿到（點）· 獲利單賺到手 ${fmtPct(ex.mfe_capture_pct)} · ${ex.with_mfe} / ${d?.trade_count} 筆有資料` : undefined}
       >
         <ExcursionChart data={ex?.trades ?? []} height={220} />
       </Panel>
