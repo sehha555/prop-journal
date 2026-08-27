@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from ..contracts import POINT_VALUE
+from ..contracts import POINT_VALUE, ROUND_TRIP_FEES
 from ..models import ExpenseIn, SetupIn
 from . import crud
 
@@ -41,4 +41,5 @@ def delete_setup(row_id: int):
 
 @router.get("/contracts")
 def contracts():
-    return POINT_VALUE
+    return {root: {"point_value": pv, "fees": ROUND_TRIP_FEES[root][0], "commissions": ROUND_TRIP_FEES[root][1]}
+            for root, pv in POINT_VALUE.items()}

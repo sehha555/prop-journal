@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import ErrorBar from "@/components/ui/ErrorBar";
 import Empty from "@/components/ui/Empty";
 import JournalDrawer from "@/components/JournalDrawer";
+import TradeModal from "@/components/TradeModal";
 import { apiGet, apiUpload, errorMessage, filterQuery } from "@/lib/api";
 import { fmtMoney, fmtNyTime, fmtR, pnlColor, SESSION_LABEL } from "@/lib/format";
 import type { ImportResult, Trade } from "@/lib/types";
@@ -21,6 +22,7 @@ export default function TradesView() {
   const [missingOnly, setMissingOnly] = useState(params.get("missing_r") === "1");
   const [importName, setImportName] = useState("");
   const [importing, setImporting] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [selected, setSelected] = useState<Trade | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +45,8 @@ export default function TradesView() {
       form.append("account_name", importAccount);
       form.append("file", file);
       const r = await apiUpload<ImportResult>("/trades/import", form);
-      setNotice(`匯入到「${r.account.name}」${r.account_created ? "（新帳戶）" : ""}：新增 ${r.added} 筆、略過 ${r.skipped} 筆`);
+      const exc = r.excursion && "updated" in r.excursion ? `，持倉過程自動算了 ${r.excursion.updated} 筆` : "";
+      setNotice(`匯入到「${r.account.name}」${r.account_created ? "（新帳戶）" : ""}：新增 ${r.added} 筆、略過 ${r.skipped} 筆${exc}`);
       if (r.account_created) loadAccounts();
       load();
     } catch (e) {
@@ -104,6 +107,8 @@ export default function TradesView() {
 
       {/* 匯入區 */}
       <div className="card flex items-center gap-3 px-[18px] py-3.5">
+        <button type="button" className="btn" onClick={() => setAdding(true)}>+ 新增交易</button>
+        <div className="h-5 w-px bg-line" />
         <div className="text-[13px] font-bold text-white">匯入 CSV</div>
         <input className="input w-[180px]" list="account-names" value={importAccount} onChange={(e) => setImportName(e.target.value)} placeholder="帳戶名，例 50K Combine" />
         <datalist id="account-names">
@@ -175,6 +180,7 @@ export default function TradesView() {
 
         <JournalDrawer key={selected?.id ?? "none"} trade={selected} onClose={() => setSelected(null)} onSaved={onSaved} />
       </div>
+      <TradeModal open={adding} onClose={() => setAdding(false)} onCreated={(t) => { setNotice(`已新增 ${t.contract} ${t.direction === "long" ? "多" : "空"} ×${t.size}`); load(); }} />
     </>
   );
 }

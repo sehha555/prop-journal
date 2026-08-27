@@ -159,10 +159,13 @@ export interface ConsistencyStats {
   revenge_size_ratio: number | null;
 }
 
+export type ContractInfo = Record<string, { point_value: number; fees: number; commissions: number }>;
+
 export interface ImportResult {
   added: number;
   skipped: number;
   importer: string;
   account: Account;
   account_created: boolean;
+  excursion: { updated: number; no_data: number } | { error: string } | null;
 }

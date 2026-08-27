@@ -26,6 +26,12 @@ def create_trade(body: TradeIn):
         new_id = insert_trade(c, body)
         if new_id is None:
             raise HTTPException(409, "同帳戶已有相同 external_id 的交易")
+    try:
+        with get_conn() as c:
+            excursion.fill(c, [new_id])
+    except Exception:  # noqa: BLE001 沒網路就先不補
+        pass
+    with get_conn() as c:
         return dict(c.execute("SELECT * FROM trades WHERE id=?", (new_id,)).fetchone())
 
 

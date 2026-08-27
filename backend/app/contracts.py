@@ -9,6 +9,15 @@ POINT_VALUE: dict[str, float] = {
     "MES": 5.0,
 }
 
+# Topstep 每口來回費用 (交易所費 fees, 佣金 commissions)，美元。
+# MNQ 是從真實匯出檔反推（3 口 fees 2.16 / comm 1.50）；其餘是牌價估的，交易到再照匯出檔校正
+ROUND_TRIP_FEES: dict[str, tuple[float, float]] = {
+    "MNQ": (0.72, 0.50),
+    "MES": (0.72, 0.50),
+    "NQ": (2.80, 1.00),
+    "ES": (2.80, 1.00),
+}
+
 # 合約代碼格式：字根 + 月份碼 + 年份，例 MNQU26、ESZ5、NQH26
 _CONTRACT_RE = re.compile(r"^([A-Z]{1,4}?)([FGHJKMNQUVXZ])(\d{1,2})$")
 

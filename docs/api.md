@@ -35,7 +35,7 @@ session ∈ `"asia"|"london"|"ny_am"|"ny_pm"|"off"`
   Expense = `{id, account_id|null, kind: "eval"|"reset"|"activation"|"subscription"|"other"|"payout", amount, date, note}`
   `payout` 是收入（出金），其餘是支出；dashboard 的 `paid_out` 與 `spent` 由此分開加總
 - `GET|POST /api/setups`，`DELETE /api/setups/{id}`  Setup = `{id, name, description}`
-- `GET /api/contracts` → `{"NQ": 20, "MNQ": 2, "ES": 50, "MES": 5}`
+- `GET /api/contracts` → `{"MNQ": {point_value: 2, fees: 0.72, commissions: 0.5}, ...}`（點值與每口來回費用，手動新增交易用來自動算）
 
 ## dashboard
 `GET /api/dashboard` →
