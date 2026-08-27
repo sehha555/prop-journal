@@ -3,9 +3,10 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from .. import excursion
 from ..db import get_conn
 from ..importers import KNOWN_IMPORTERS, detect_importer, read_csv
-from ..models import Filters, TradeIn, TradePatch
+from ..models import ExcursionIn, Filters, TradeIn, TradePatch
 from ..trades_core import fetch_trades, insert_trade, recompute
 from . import crud
 
@@ -85,11 +86,32 @@ async def import_csv(account_name: str = Form(...), file: UploadFile = File(...)
     except ValueError as e:
         raise HTTPException(400, {"detail": str(e), "known_importers": [imp.name]})
     added = skipped = 0
+    new_ids = []
     with get_conn() as c:
         for t in trades:
-            if insert_trade(c, t) is None:
+            new_id = insert_trade(c, t)
+            if new_id is None:
                 skipped += 1
             else:
                 added += 1
+                new_ids.append(new_id)
+    # 匯完順手用真實 K 棒補持倉過程；沒網路或抓不到不影響匯入
+    exc = None
+    if new_ids:
+        try:
+            with get_conn() as c:
+                exc = excursion.fill(c, new_ids)
+        except Exception as e:  # noqa: BLE001
+            exc = {"error": str(e)}
     return {"added": added, "skipped": skipped, "importer": imp.name,
-            "account": account, "account_created": created}
+            "account": account, "account_created": created, "excursion": exc}
+
+
+@router.post("/excursion")
+def fill_excursion(body: ExcursionIn):
+    """用真實 K 棒補 MFE / MAE。預設只補空的；force 連已填的一起重算。"""
+    try:
+        with get_conn() as c:
+            return excursion.fill(c, body.trade_ids, body.force)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(502, f"抓 K 棒失敗：{e}")

@@ -4,6 +4,14 @@ from fastapi.testclient import TestClient
 from app import db
 
 
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    """測試不抓 Yahoo K 棒：匯入後的自動補持倉過程一律拿不到資料"""
+    from app import excursion
+    monkeypatch.setattr(excursion, "fetch_bars", lambda *a, **k: [])
+    monkeypatch.setattr(excursion, "pick_interval", lambda start, now=None: "1m")
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", tmp_path / "t.db")

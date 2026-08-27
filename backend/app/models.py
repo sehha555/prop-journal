@@ -63,6 +63,11 @@ class TradePatch(BaseModel):
     note: Optional[str] = None
 
 
+class ExcursionIn(BaseModel):
+    trade_ids: Optional[list[int]] = None
+    force: bool = False
+
+
 class ExpenseIn(BaseModel):
     account_id: Optional[int] = None
     kind: ExpenseKind

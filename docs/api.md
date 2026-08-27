@@ -19,6 +19,7 @@ Account = `{id, firm, name, kind, starting_balance, profit_target, status, creat
 - `POST /api/trades` 手 key，body = Trade 去掉 id / 推導欄位
 - `PATCH /api/trades/{id}` body `{planned_stop_pts?, mfe_pts?, mae_pts?, moved_to_be?, setup?, note?}` → Trade（重算 R）
 - `DELETE /api/trades/{id}`
+- `POST /api/trades/excursion` body `{trade_ids?, force?}` → `{updated, no_data, unknown_symbol}`：用 Yahoo 分 K 補 mfe_pts / mae_pts（7 天內 1 分 K、60 天內 5 分 K、更早沒資料）。匯入完成會自動跑一次，回傳附 `excursion`
 - `POST /api/trades/import` multipart：`account_name`、`file` → `{added, skipped, importer: "topstepx", account, account_created}`；帳戶名同名（不分大小寫）疊加、沒有就自動建（起始資金 / 目標從名字的 50K / 100K / 150K 推，並自動記一筆 eval 購買費用，牌價見 `EVAL_PRICE`）；認不出格式回 400 `{detail, known_importers}`
 
 Trade = `{id, account_id, external_id, contract, symbol_root, direction: "long"|"short", size,
