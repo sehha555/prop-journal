@@ -89,6 +89,9 @@ def test_import_creates_account_from_name(client):
     r = client.post("/api/trades/import", data={"account_name": "100k combine"}, files=files)
     assert r.json()["account_created"] is False and r.json()["skipped"] == 3
     assert len(client.get("/api/accounts").json()) == 1
+    # 新帳戶自動記一筆購買費用（100K 牌價 99），疊加時不重複記
+    exp = client.get("/api/expenses").json()
+    assert len(exp) == 1 and exp[0]["kind"] == "eval" and exp[0]["amount"] == 99
 
 
 def test_sessions():

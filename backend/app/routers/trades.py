@@ -1,4 +1,5 @@
 import re
+from datetime import date
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
@@ -40,12 +41,25 @@ def delete_trade(trade_id: int):
     return crud.delete_row("trades", trade_id)
 
 
+# Topstep 定價（2026 記憶中的牌價，不含折扣碼）：帳號大小 → 月費。改價只改這裡
+EVAL_PRICE = {50000: 49, 100000: 99, 150000: 149}
+
+
 def infer_account(name: str) -> dict:
     """從帳號名推 Topstep 規格：50K → 起始 50,000 / 目標 3,000；100K → 6,000；150K → 9,000。推不出用 50K。"""
     m = re.search(r"(\d+)\s*K", name, re.IGNORECASE)
     size = int(m.group(1)) * 1000 if m else 50000
     return {"firm": "Topstep", "name": name, "kind": "eval", "starting_balance": size,
             "profit_target": size * 0.06}
+
+
+def seed_eval_expense(account: dict, date: str) -> None:
+    """新帳戶自動記一筆購買費用（預設牌價），使用者照收據改"""
+    price = EVAL_PRICE.get(int(account["starting_balance"]))
+    if price is None:
+        return
+    crud.insert_row("expenses", {"account_id": account["id"], "kind": "eval", "amount": price, "date": date,
+                                 "note": "自動填的預設牌價，請照收據修正"})
 
 
 @router.post("/import")
@@ -60,6 +74,8 @@ async def import_csv(account_name: str = Form(...), file: UploadFile = File(...)
     account = crud.insert_row("accounts", infer_account(name)) if created else dict(row)
     account_id = account["id"]
     headers, rows = read_csv(await file.read())
+    if created:
+        seed_eval_expense(account, date.today().isoformat())
     imp = detect_importer(headers)
     if imp is None:
         raise HTTPException(400, {"detail": "認不出這個 CSV 的格式", "headers": headers,
