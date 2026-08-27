@@ -1,0 +1,43 @@
+# 手動或推 tag 時打包桌面版：Windows exe、Mac（Apple Silicon 與 Intel）。產物各一個 zip
+name: build-desktop
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: mac-apple-silicon
+          - os: macos-15-intel
+            name: mac-intel
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r backend/requirements.txt pyinstaller
+      - run: python -m PyInstaller build.spec --noconfirm
+        working-directory: backend
+      - run: cp "給朋友的說明.txt" backend/dist/prop-journal/
+        shell: bash
+      - if: runner.os == 'macOS'
+        run: cp "開始.command" backend/dist/prop-journal/ && chmod +x "backend/dist/prop-journal/開始.command"
+      # Mac 要保住執行權限，先在 runner 上 zip 起來再上傳
+      - if: runner.os == 'macOS'
+        run: cd backend/dist && ditto -c -k --sequesterRsrc --keepParent prop-journal ../../prop-journal-${{ matrix.name }}.zip
+      - if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: prop-journal-${{ matrix.name }}
+          path: prop-journal-${{ matrix.name }}.zip
+      - if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: prop-journal-${{ matrix.name }}
+          path: backend/dist/prop-journal
