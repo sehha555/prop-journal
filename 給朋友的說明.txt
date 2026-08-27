@@ -1,5 +1,13 @@
 prop-journal 使用說明
 
+方法 A：一行指令安裝（推薦，之後更新也是同一行）
+  Mac：打開「終端機」貼上
+    curl -fsSL https://raw.githubusercontent.com/sehha555/prop-journal/main/install.sh | bash
+  Windows：打開「PowerShell」貼上
+    irm https://raw.githubusercontent.com/sehha555/prop-journal/main/install.ps1 | iex
+  會自動下載到桌面 prop-journal 並啟動；之後雙擊裡面的 start.command（Mac）/ start.bat（Windows）。
+
+方法 B：直接用打包好的程式（不用裝任何東西）
 Windows：
 1. 解壓到任何地方（例如桌面），雙擊 prop-journal.exe
 2. 若跳「Windows 已保護您的電腦」→「其他資訊」→「仍要執行」（只有第一次）
