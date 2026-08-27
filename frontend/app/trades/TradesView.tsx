@@ -14,19 +14,18 @@ import { useLoader } from "@/lib/useLoader";
 
 export default function TradesView() {
   const params = useSearchParams();
-  const accounts = useAppStore((s) => s.accounts);
+  const { accounts, loadAccounts } = useAppStore();
   const accErr = useEnsureAccounts();
   const [notice, setNotice] = useState<string | null>(null);
   const [filterAccount, setFilterAccount] = useState<number | null>(null);
   const [missingOnly, setMissingOnly] = useState(params.get("missing_r") === "1");
-  const [importAccountPick, setImportAccountPick] = useState<number | null>(null);
+  const [importName, setImportName] = useState("");
   const [importing, setImporting] = useState(false);
   const [selected, setSelected] = useState<Trade | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // 匯入帳戶：沒手動選就預設第一個進行中的帳戶
-  const importAccount =
-    importAccountPick ?? (accounts.find((a) => a.status === "active") ?? accounts[0])?.id ?? null;
+  // 匯入帳戶名：沒打就預設第一個進行中的帳戶；打新名字後端會自動建
+  const importAccount = importName || ((accounts.find((a) => a.status === "active") ?? accounts[0])?.name ?? "");
 
   const { data: trades, setData: setTrades, error: err, setError: setErr, reload: load } = useLoader(() => {
     const q = filterQuery({ account_id: filterAccount });
@@ -35,16 +34,17 @@ export default function TradesView() {
   }, [filterAccount, missingOnly]);
 
   const onFile = async (file: File | null) => {
-    if (!file || importAccount === null) return;
+    if (!file || !importAccount) return;
     setImporting(true);
     setNotice(null);
     setErr(null);
     try {
       const form = new FormData();
-      form.append("account_id", String(importAccount));
+      form.append("account_name", importAccount);
       form.append("file", file);
       const r = await apiUpload<ImportResult>("/trades/import", form);
-      setNotice(`匯入完成（${r.importer}）：新增 ${r.added} 筆、略過 ${r.skipped} 筆`);
+      setNotice(`匯入到「${r.account.name}」${r.account_created ? "（新帳戶）" : ""}：新增 ${r.added} 筆、略過 ${r.skipped} 筆`);
+      if (r.account_created) loadAccounts();
       load();
     } catch (e) {
       setErr(errorMessage(e));
@@ -90,14 +90,14 @@ export default function TradesView() {
       {/* 匯入區 */}
       <div className="card flex items-center gap-3 px-[18px] py-3.5">
         <div className="text-[13px] font-bold text-white">匯入 CSV</div>
-        <select className="input" value={importAccount ?? ""} onChange={(e) => setImportAccountPick(Number(e.target.value))} disabled={!accounts.length}>
-          {!accounts.length && <option value="">先建立帳戶</option>}
+        <input className="input w-[180px]" list="account-names" value={importAccount} onChange={(e) => setImportName(e.target.value)} placeholder="帳戶名，例 50K Combine" />
+        <datalist id="account-names">
           {accounts.map((a) => (
-            <option key={a.id} value={a.id}>{a.firm} · {a.name}</option>
+            <option key={a.id} value={a.name} />
           ))}
-        </select>
+        </datalist>
         <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
-        <button type="button" className="btn btn-primary" disabled={importing || importAccount === null} onClick={() => fileRef.current?.click()}>
+        <button type="button" className="btn btn-primary" disabled={importing || !importAccount} onClick={() => fileRef.current?.click()}>
           {importing ? "匯入中…" : "選擇 TopstepX CSV"}
         </button>
         <div

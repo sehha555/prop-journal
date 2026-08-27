@@ -7,10 +7,10 @@ NY = ZoneInfo("America/New_York")
 
 # (key, 中文標籤, 起, 迄)；跨午夜的用 start > end 表示
 SESSIONS: list[tuple[str, str, time, time]] = [
-    ("asia", "Asia", time(18, 0), time(3, 0)),
-    ("london", "London", time(3, 0), time(9, 30)),
-    ("ny_am", "NY AM", time(9, 30), time(12, 0)),
-    ("ny_pm", "NY PM", time(12, 0), time(16, 0)),
+    ("asia", "Asia", time(20, 0), time(0, 0)),
+    ("london", "London", time(2, 0), time(5, 0)),
+    ("ny_am", "NY AM", time(8, 0), time(13, 0)),
+    ("ny_pm", "NY PM", time(13, 0), time(18, 0)),
 ]
 OFF = ("off", "Off-hours")
 
@@ -30,7 +30,7 @@ def session_of(dt_utc: datetime) -> str:
         if start < end:
             if start <= t < end:
                 return key
-        elif t >= start or t < end:
+        elif t >= start or (end != time(0, 0) and t < end):
             return key
     return OFF[0]
 

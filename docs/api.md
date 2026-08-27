@@ -19,7 +19,7 @@ Account = `{id, firm, name, kind, starting_balance, profit_target, status, creat
 - `POST /api/trades` 手 key，body = Trade 去掉 id / 推導欄位
 - `PATCH /api/trades/{id}` body `{planned_stop_pts?, mfe_pts?, mae_pts?, moved_to_be?, setup?, note?}` → Trade（重算 R）
 - `DELETE /api/trades/{id}`
-- `POST /api/trades/import` multipart：`account_id`、`file` → `{added, skipped, importer: "topstepx"}`；認不出格式回 400 `{detail, known_importers}`
+- `POST /api/trades/import` multipart：`account_name`、`file` → `{added, skipped, importer: "topstepx", account, account_created}`；帳戶名同名（不分大小寫）疊加、沒有就自動建（起始資金 / 目標從名字的 50K / 100K / 150K 推）；認不出格式回 400 `{detail, known_importers}`
 
 Trade = `{id, account_id, external_id, contract, symbol_root, direction: "long"|"short", size,
 entry_time, exit_time (ISO UTC), entry_price, exit_price, pnl, commissions, fees,

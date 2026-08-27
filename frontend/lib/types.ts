@@ -163,4 +163,6 @@ export interface ImportResult {
   added: number;
   skipped: number;
   importer: string;
+  account: Account;
+  account_created: boolean;
 }

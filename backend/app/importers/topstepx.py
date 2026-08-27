@@ -30,7 +30,8 @@ ALIASES: dict[str, list[str]] = {
 }
 REQUIRED = ["contract", "size", "entry_time", "exit_time", "entry_price", "exit_price", "pnl", "direction"]
 
-TIME_FORMATS = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f", "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %H:%M", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"]
+# 真實 EXPORT 帶時區：08/26/2026 21:06:59 +08:00（跟平台顯示的時區走）
+TIME_FORMATS = ["%m/%d/%Y %H:%M:%S %z", "%Y-%m-%d %H:%M:%S %z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f", "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %H:%M", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"]
 
 
 def parse_time(s: str) -> str:
