@@ -6,8 +6,9 @@ import ErrorBar from "@/components/ui/ErrorBar";
 import StatCard from "@/components/ui/StatCard";
 import Field from "@/components/ui/Field";
 import Empty from "@/components/ui/Empty";
+import CashflowChart from "@/components/charts/CashflowChart";
 import { apiGet, apiSend, errorMessage } from "@/lib/api";
-import { EXPENSE_KIND_LABEL, fmtMoney } from "@/lib/format";
+import { EXPENSE_KIND_LABEL, fmtMoney, fmtPct, pnlColor } from "@/lib/format";
 import type { Expense, ExpenseKind } from "@/lib/types";
 import { useAppStore, useEnsureAccounts } from "@/store";
 import { useLoader } from "@/lib/useLoader";
@@ -62,6 +63,8 @@ export default function ExpensesPage() {
   const spent = rows?.filter((r) => r.kind !== "payout").reduce((s, r) => s + r.amount, 0) ?? 0;
   const paidOut = rows?.filter((r) => r.kind === "payout").reduce((s, r) => s + r.amount, 0) ?? 0;
   const net = paidOut - spent;
+  // 報酬率 = 淨利 / 總花費；沒花過錢就沒有報酬率
+  const roi = spent > 0 ? (net / spent) * 100 : null;
   const sorted = rows ? [...rows].sort((a, b) => b.date.localeCompare(a.date)) : [];
 
   return (
@@ -69,10 +72,18 @@ export default function ExpensesPage() {
       <PageHeader title="收支" subtitle={rows ? `${rows.length} 筆` : "載入中…"} />
       <ErrorBar message={err ?? accErr} onClose={() => setErr(null)} />
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <StatCard label="總花費" value={fmtMoney(spent)} hint="eval、reset、啟用、月費、其他" />
         <StatCard label="已出金" value={fmtMoney(paidOut)} hint="payout 加總" />
         <StatCard label="淨利" value={fmtMoney(net, { sign: true })} hint="已出金 − 總花費" accent />
+        <StatCard label="報酬率" value={roi !== null ? `${roi >= 0 ? "+" : ""}${Math.round(roi)}%` : "—"} valueClass={pnlColor(roi)} hint="淨利 / 總花費" />
+      </div>
+      <div className="card flex flex-col gap-2 px-[18px] py-4">
+        <div className="flex items-baseline justify-between">
+          <div className="text-[14px] font-bold text-white">回本曲線</div>
+          <div className="text-[11px] font-semibold text-muted">金線 = 累積淨利 · 綠虛線 = 累積出金 · 紅虛線 = 累積花費</div>
+        </div>
+        <CashflowChart rows={rows ?? []} />
       </div>
 
       {/* 新增表單 */}
