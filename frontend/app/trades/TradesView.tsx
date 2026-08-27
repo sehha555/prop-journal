@@ -1,6 +1,6 @@
 "use client";
 // 交易頁：匯入區 + 表格 + 右側 journal 欄
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import ErrorBar from "@/components/ui/ErrorBar";
@@ -54,6 +54,21 @@ export default function TradesView() {
     }
   };
 
+  // 整頁都接受拖放 CSV：不擋 dragover 的話，拖到虛線框外瀏覽器會直接開檔案蓋掉頁面
+  useEffect(() => {
+    const over = (e: DragEvent) => e.preventDefault();
+    const drop = (e: DragEvent) => {
+      e.preventDefault();
+      onFile(e.dataTransfer?.files?.[0] ?? null);
+    };
+    window.addEventListener("dragover", over);
+    window.addEventListener("drop", drop);
+    return () => {
+      window.removeEventListener("dragover", over);
+      window.removeEventListener("drop", drop);
+    };
+  });
+
   const onSaved = (t: Trade) => {
     setTrades((prev) => prev?.map((x) => (x.id === t.id ? t : x)) ?? prev);
     setSelected(t);
@@ -102,13 +117,8 @@ export default function TradesView() {
         </button>
         <div
           className="flex grow items-center justify-center rounded-lg border border-dashed border-line px-3 py-2 text-[12px] font-semibold text-faint"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault();
-            onFile(e.dataTransfer.files?.[0] ?? null);
-          }}
         >
-          或把 CSV 拖到這裡
+          或把 CSV 拖到頁面任何地方
         </div>
         {notice && <div className="text-[12px] font-semibold text-green">{notice}</div>}
       </div>
