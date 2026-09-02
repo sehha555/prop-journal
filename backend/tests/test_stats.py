@@ -78,7 +78,17 @@ def test_filters_by_date(seeded):
     assert p["trade_count"] == 2 and p["total_pnl"] == 10
 
 
-def test_dashboard(seeded, account):
+def test_dashboard(seeded, account, monkeypatch):
+    # 「本月」跟著真實日期走，把今天釘在 2026-08，測試才不會過了 8 月就壞
+    from datetime import datetime
+    from app.routers import stats as stats_router
+
+    class Frozen(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 8, 15, 12, tzinfo=tz)
+
+    monkeypatch.setattr(stats_router, "datetime", Frozen)
     seeded.post("/api/expenses", json={"kind": "eval", "amount": 149, "date": "2026-08-01"})
     seeded.post("/api/expenses", json={"kind": "subscription", "amount": 165, "date": "2026-08-01"})
     seeded.post("/api/expenses", json={"account_id": account["id"], "kind": "payout", "amount": 1000, "date": "2026-08-10"})
