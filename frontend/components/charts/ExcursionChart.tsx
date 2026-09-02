@@ -12,22 +12,24 @@ export default function ExcursionChart({ data, height = 200 }: { data: Excursion
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={rows} margin={{ top: 6, right: 4, bottom: 0, left: 0 }} barCategoryGap="35%">
+        <ComposedChart data={rows} stackOffset="sign" margin={{ top: 6, right: 4, bottom: 0, left: 0 }} barCategoryGap="35%">
           <XAxis dataKey="idx" tick={axisTick} axisLine={{ stroke: C.line }} tickLine={false} minTickGap={16} />
           <YAxis tick={axisTick} axisLine={false} tickLine={false} width={40} tickFormatter={(v: number) => `${v}`} />
           <ReferenceLine y={0} stroke={C.line} />
           <Tooltip
             {...tooltipStyle}
             cursor={{ fill: "#23272d", opacity: 0.4 }}
-            labelFormatter={(_, p) => {
-              const r = p?.[0]?.payload as (typeof rows)[number] | undefined;
-              return r ? `${fmtNyTime(r.exit_time)} · ${r.contract} ${r.direction === "long" ? "多" : "空"}` : "";
-            }}
-            formatter={(v, name) => {
-              const n = Number(v);
-              if (name === "mfe") return [`+${n.toFixed(2)} 點`, "最多曾賺"];
-              if (name === "maeNeg") return [`-${Math.abs(n).toFixed(2)} 點`, "最多曾賠"];
-              return [`${n >= 0 ? "+" : ""}${n.toFixed(2)} 點`, "實際拿到"];
+            content={({ payload }) => {
+              const r = payload?.[0]?.payload as (typeof rows)[number] | undefined;
+              if (!r) return null;
+              return (
+                <div style={tooltipStyle.contentStyle} className="px-2 py-1.5">
+                  <div style={tooltipStyle.labelStyle}>{fmtNyTime(r.exit_time)} · {r.contract} {r.direction === "long" ? "多" : "空"}</div>
+                  <div>最多曾賺 +{r.mfe.toFixed(2)} 點</div>
+                  <div>最多曾賠 -{r.mae.toFixed(2)} 點</div>
+                  <div>實際拿到 {r.got >= 0 ? "+" : ""}{r.got.toFixed(2)} 點</div>
+                </div>
+              );
             }}
           />
           <Bar dataKey="mfe" stackId="x" fill={C.green} radius={[2, 2, 0, 0]} />
