@@ -4,6 +4,7 @@ import StatCard from "@/components/ui/StatCard";
 import EquityChart from "@/components/charts/EquityChart";
 import DailyBars from "@/components/charts/DailyBars";
 import ExcursionChart from "@/components/charts/ExcursionChart";
+import MaeScatter from "@/components/charts/MaeScatter";
 import { fmtMoney, fmtNum, fmtPct, pnlColor } from "@/lib/format";
 import type { PerformanceStats } from "@/lib/types";
 
@@ -51,6 +52,9 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
         hint={ex ? `綠柱 = 最多曾賺 · 紅柱 = 最多曾賠 · 白點 = 實際拿到（點）· 獲利單賺到手 ${fmtPct(ex.mfe_capture_pct)} · ${ex.with_mfe} / ${d?.trade_count} 筆有資料` : undefined}
       >
         <ExcursionChart data={ex?.trades ?? []} height={220} />
+      </Panel>
+      <Panel title="MAE 分佈" hint="每筆一點：橫軸 = 最多曾賠幾點 · 縱軸 = 實際拿到幾點 · 綠賺紅賠。看逆勢超過幾點就救不回來，找停損該放哪">
+        <MaeScatter data={ex?.trades ?? []} height={220} />
       </Panel>
     </>
   );
