@@ -105,3 +105,21 @@ def test_sessions():
     assert session_of(utc(0, 30)) == "off"
     assert session_of(utc(2)) == "london"
     assert session_of(utc(6)) == "off"
+
+
+def test_auto_import_scan(client, account, tmp_path):
+    """Downloads 自動匯入：符合的檔匯完搬走，不符合的留著並回錯誤"""
+    from app import auto_import
+    dl = tmp_path / "dl"
+    dl.mkdir()
+    (dl / "trades_export-3.csv").write_bytes(SAMPLE.read_bytes())
+    (dl / "trades_export-bad.csv").write_bytes(b"a,b\n1,2\n")
+    (dl / "other.csv").write_bytes(b"a,b\n1,2\n")
+    done = dl / "done"
+    results = auto_import.scan(dl, done, account["name"])
+    assert results == [{"file": "trades_export-3.csv", "added": 3, "skipped": 0},
+                       {"file": "trades_export-bad.csv", "error": results[1]["error"]}]
+    assert "認不出" in results[1]["error"]
+    assert (done / "trades_export-3.csv").exists() and not (dl / "trades_export-3.csv").exists()
+    assert (dl / "trades_export-bad.csv").exists() and (dl / "other.csv").exists()
+    assert len(client.get("/api/trades").json()) == 3

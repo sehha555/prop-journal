@@ -69,28 +69,24 @@ def seed_eval_expense(account: dict, date: str) -> None:
                                  "note": "自動填的預設牌價，請照收據修正"})
 
 
-@router.post("/import")
-async def import_csv(account_name: str = Form(...), file: UploadFile = File(...)):
-    """CSV 沒帳號欄，帳戶由使用者打名字；同名（不分大小寫）就疊加，沒有就自動建。"""
+def run_import(account_name: str, data: bytes) -> dict:
+    """CSV 沒帳號欄，帳戶由使用者打名字；同名（不分大小寫）就疊加，沒有就自動建。
+    格式認不出或欄位讀不懂會丟 ValueError。HTTP 路由與 Downloads 自動匯入共用。"""
     name = account_name.strip()
     if not name:
-        raise HTTPException(400, "請填帳戶名")
+        raise ValueError("請填帳戶名")
     with get_conn() as c:
         row = c.execute("SELECT * FROM accounts WHERE lower(name)=lower(?)", (name,)).fetchone()
     created = row is None
     account = crud.insert_row("accounts", infer_account(name)) if created else dict(row)
     account_id = account["id"]
-    headers, rows = read_csv(await file.read())
+    headers, rows = read_csv(data)
     if created:
         seed_eval_expense(account, date.today().isoformat())
     imp = detect_importer(headers)
     if imp is None:
-        raise HTTPException(400, {"detail": "認不出這個 CSV 的格式", "headers": headers,
-                                  "known_importers": [i.name for i in KNOWN_IMPORTERS]})
-    try:
-        trades = imp.parse(rows, account_id)
-    except ValueError as e:
-        raise HTTPException(400, {"detail": str(e), "known_importers": [imp.name]})
+        raise ValueError(f"認不出這個 CSV 的格式，欄位：{headers}")
+    trades = imp.parse(rows, account_id)
     added = skipped = 0
     new_ids = []
     with get_conn() as c:
@@ -111,6 +107,14 @@ async def import_csv(account_name: str = Form(...), file: UploadFile = File(...)
             exc = {"error": str(e)}
     return {"added": added, "skipped": skipped, "importer": imp.name,
             "account": account, "account_created": created, "excursion": exc}
+
+
+@router.post("/import")
+async def import_csv(account_name: str = Form(...), file: UploadFile = File(...)):
+    try:
+        return run_import(account_name, await file.read())
+    except ValueError as e:
+        raise HTTPException(400, {"detail": str(e), "known_importers": [i.name for i in KNOWN_IMPORTERS]})
 
 
 @router.post("/excursion")
