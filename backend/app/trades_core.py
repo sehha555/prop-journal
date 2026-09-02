@@ -16,6 +16,20 @@ def parse_iso(s: str) -> datetime:
     return dt
 
 
+# 使用者的停損習慣：每筆抓 250 美元。虧損單直接用實際賠的金額當停損（會多一點少一點），
+# 獲利單和只小賠的單（賠不到一半，通常是推保本後掃出）用 250 算。
+DEFAULT_RISK_USD = 250.0
+
+
+def auto_stop_pts(contract: str, size: int, pnl: float) -> float | None:
+    """沒填計畫停損時自動推：金額 ÷（口數 × 點值）。不認得的商品回 None。"""
+    root = symbol_root(contract)
+    if not root or size <= 0:
+        return None
+    risk = -pnl if pnl < 0 and -pnl >= DEFAULT_RISK_USD / 2 else DEFAULT_RISK_USD
+    return round(risk / (POINT_VALUE[root] * size), 2)
+
+
 def derive(contract: str, size: int, pnl: float, planned_stop_pts, entry_time: str) -> dict:
     root = symbol_root(contract)
     risk = r = None
@@ -33,6 +47,8 @@ def derive(contract: str, size: int, pnl: float, planned_stop_pts, entry_time: s
 def insert_trade(conn: sqlite3.Connection, t: TradeIn) -> int | None:
     """回傳新 id；(account_id, external_id) 已存在回 None。"""
     ext = t.external_id or uuid.uuid4().hex
+    if t.planned_stop_pts is None:
+        t.planned_stop_pts = auto_stop_pts(t.contract, t.size, t.pnl)
     d = derive(t.contract, t.size, t.pnl, t.planned_stop_pts, t.entry_time)
     try:
         cur = conn.execute(

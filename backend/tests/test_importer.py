@@ -22,7 +22,8 @@ def test_import_and_dedupe(client, account):
     assert t["entry_time"].startswith("2026-08-19T13:35:10")
     assert t["session"] == "ny_am"
     assert trades[2]["session"] == "asia"  # 20:15 紐約
-    assert t["r_multiple"] is None
+    # 匯入就自動填停損：獲利單 250 美元 / (1 口 × $2) = 125 點，pnl 38.52 → 0.154 R
+    assert t["planned_stop_pts"] == 125 and round(t["r_multiple"], 3) == 0.154
 
 
 def test_unknown_csv(client, account):
@@ -35,13 +36,12 @@ def test_unknown_csv(client, account):
 def test_journal_patch_computes_r(client, account):
     files = {"file": ("t.csv", SAMPLE.read_bytes(), "text/csv")}
     client.post("/api/trades/import", data={"account_name": account["name"]}, files=files)
-    t = client.get("/api/trades", params={"missing_r": 1}).json()[0]
+    t = client.get("/api/trades").json()[0]
+    # 自動填的停損可以手動覆蓋：MNQ 10 點 × $2 × 1 口 = $20 風險，pnl 38.52 → 1.926 R
     r = client.patch(f"/api/trades/{t['id']}", json={"planned_stop_pts": 10, "setup": "SMT"})
     body = r.json()
-    # MNQ 10 點 × $2 × 1 口 = $20 風險，pnl 38.52 → 1.926 R
     assert body["risk_usd"] == 20
     assert round(body["r_multiple"], 3) == 1.926
-    assert len(client.get("/api/trades", params={"missing_r": 1}).json()) == 2
 
 
 def test_mfe_mae_patch_and_stats(client, account):
