@@ -1,21 +1,23 @@
 "use client";
-// 統計：績效 / 時段 / consistency 三個 tab
+// 統計：績效 / 時段 / consistency / 月曆四個 tab
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import ErrorBar from "@/components/ui/ErrorBar";
 import FilterBar from "@/components/FilterBar";
 import { apiGet, errorMessage, filterQuery } from "@/lib/api";
-import type { ConsistencyStats, PerformanceStats, RCoverage, SessionStats } from "@/lib/types";
+import type { CalendarDay, ConsistencyStats, PerformanceStats, RCoverage, SessionStats } from "@/lib/types";
 import { useAppStore, useEnsureAccounts } from "@/store";
 import PerformanceTab from "./PerformanceTab";
 import SessionsTab from "./SessionsTab";
 import ConsistencyTab from "./ConsistencyTab";
+import CalendarTab from "./CalendarTab";
 
-type Tab = "performance" | "sessions" | "consistency";
+type Tab = "performance" | "sessions" | "consistency" | "calendar";
 const TABS: { key: Tab; label: string }[] = [
   { key: "performance", label: "績效" },
   { key: "sessions", label: "時段" },
   { key: "consistency", label: "Consistency" },
+  { key: "calendar", label: "月曆" },
 ];
 
 export default function StatsPage() {
@@ -26,6 +28,7 @@ export default function StatsPage() {
   const [perf, setPerf] = useState<PerformanceStats | null>(null);
   const [sess, setSess] = useState<SessionStats | null>(null);
   const [cons, setCons] = useState<ConsistencyStats | null>(null);
+  const [cal, setCal] = useState<CalendarDay[] | null>(null);
 
   // 切 tab 或改篩選就重抓該 tab 的資料
   useEffect(() => {
@@ -35,7 +38,8 @@ export default function StatsPage() {
       try {
         if (tab === "performance") setPerf(await apiGet<PerformanceStats>(`/stats/performance${q}`));
         else if (tab === "sessions") setSess(await apiGet<SessionStats>(`/stats/sessions${q}`));
-        else setCons(await apiGet<ConsistencyStats>(`/stats/consistency${q}`));
+        else if (tab === "consistency") setCons(await apiGet<ConsistencyStats>(`/stats/consistency${q}`));
+        else setCal((await apiGet<{ days: CalendarDay[] }>(`/stats/calendar${q}`)).days);
         if (!cancelled) setErr(null);
       } catch (e) {
         if (!cancelled) setErr(errorMessage(e));
@@ -48,7 +52,7 @@ export default function StatsPage() {
   }, [tab, filter]);
 
   const coverage: RCoverage | undefined =
-    tab === "performance" ? perf?.r_coverage : tab === "sessions" ? sess?.r_coverage : cons?.r_coverage;
+    tab === "performance" ? perf?.r_coverage : tab === "sessions" ? sess?.r_coverage : tab === "consistency" ? cons?.r_coverage : undefined;
   const missing = coverage ? coverage.total - coverage.with_r : 0;
 
   return (
@@ -91,6 +95,7 @@ export default function StatsPage() {
       {tab === "performance" && <PerformanceTab data={perf} />}
       {tab === "sessions" && <SessionsTab data={sess} />}
       {tab === "consistency" && <ConsistencyTab data={cons} />}
+      {tab === "calendar" && <CalendarTab days={cal} />}
     </>
   );
 }

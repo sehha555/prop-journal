@@ -97,3 +97,10 @@ def test_dashboard(seeded, account, monkeypatch):
     a = d["accounts"][0]
     assert a["balance"] == 50050 and a["trade_count"] == 10 and a["win_rate"] == 50.0
     assert d["month"]["blown_r_count"] == 1 and d["month"]["missing_r_count"] == 0
+
+
+def test_calendar(client, seeded):
+    days = client.get("/api/stats/calendar").json()["days"]
+    assert [d["date"] for d in days] == ["2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"]
+    assert days[0] == {"date": "2026-08-03", "pnl": 20, "count": 2}
+    assert days[2]["pnl"] == 10 and days[3]["pnl"] == -10

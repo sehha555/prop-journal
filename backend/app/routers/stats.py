@@ -6,7 +6,7 @@ from ..db import get_conn
 from ..models import Filters
 from ..sessions import NY
 from ..stats import consistency, performance, sessions
-from ..stats.common import best_day_pct, equity_curve
+from ..stats.common import best_day_pct, daily_summary, equity_curve
 from ..trades_core import fetch_trades
 
 router = APIRouter(prefix="/api", tags=["stats"])
@@ -28,6 +28,12 @@ def stats_sessions(f: Filters = Depends()):
 def stats_consistency(f: Filters = Depends()):
     with get_conn() as c:
         return consistency.compute(fetch_trades(c, f))
+
+
+@router.get("/stats/calendar")
+def stats_calendar(f: Filters = Depends()):
+    with get_conn() as c:
+        return {"days": daily_summary(fetch_trades(c, f))}
 
 
 @router.get("/dashboard")

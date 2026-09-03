@@ -99,6 +99,12 @@ export interface StatsFilter {
   symbol_root: string;
 }
 
+export interface CalendarDay {
+  date: string; // 紐約交易日 YYYY-MM-DD
+  pnl: number;
+  count: number;
+}
+
 export interface PerformanceStats {
   r_coverage: RCoverage;
   total_pnl: number;

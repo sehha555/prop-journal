@@ -31,6 +31,15 @@ def daily_pnl(trades: list[dict]) -> dict[str, float]:
     return dict(sorted(d.items()))
 
 
+def daily_summary(trades: list[dict]) -> list[dict]:
+    """月曆用：每個紐約交易日的毛損益與筆數"""
+    d: dict[str, list] = defaultdict(lambda: [0.0, 0])
+    for t in trades:
+        d[t["ny_date"]][0] += t["pnl"]
+        d[t["ny_date"]][1] += 1
+    return [{"date": k, "pnl": round(v[0], 2), "count": v[1]} for k, v in sorted(d.items())]
+
+
 def equity_curve(trades: list[dict]) -> list[dict]:
     cum = 0.0
     out = []
