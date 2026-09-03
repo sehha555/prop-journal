@@ -58,19 +58,20 @@ def test_mfe_mae_patch_and_stats(client, account):
     assert ex["mfe_capture_pct"] == round(got / 40 * 100, 1)
 
 
-def test_moved_to_be_stats(client, account):
+def test_be_stats(client, account):
+    """保本出場自動判：損益正負 10 美元內算保本，不用手動勾"""
     files = {"file": ("t.csv", SAMPLE.read_bytes(), "text/csv")}
     client.post("/api/trades/import", data={"account_name": account["name"]}, files=files)
-    trades = client.get("/api/trades").json()
-    assert trades[0]["moved_to_be"] == 0
-    loser = next(t for t in trades if t["pnl"] < 0)
-    client.patch(f"/api/trades/{loser['id']}", json={"moved_to_be": True, "mfe_pts": 12})
     ex = client.get("/api/stats/performance").json()["excursion"]
-    assert ex["be_count"] == 1 and ex["be_stopped"] == 1 and ex["be_stopped_avg_mfe_pts"] == 12
-
-    # 取消勾選也要寫得回去（False 不能被當成「沒改」）
-    r = client.patch(f"/api/trades/{loser['id']}", json={"moved_to_be": False})
-    assert r.json()["moved_to_be"] == 0
+    assert ex["be_count"] == 0
+    base = {"account_id": account["id"], "contract": "MNQU6", "direction": "long", "size": 1,
+            "entry_time": "2026-08-20T14:00:00Z", "exit_time": "2026-08-20T14:05:00Z",
+            "entry_price": 20000, "exit_price": 20000, "mfe_pts": 12}
+    client.post("/api/trades", json={**base, "pnl": -4})
+    client.post("/api/trades", json={**base, "pnl": 9.5, "mfe_pts": 20})
+    client.post("/api/trades", json={**base, "pnl": -11})
+    ex = client.get("/api/stats/performance").json()["excursion"]
+    assert ex["be_count"] == 2 and ex["be_avg_mfe_pts"] == 16
 
 
 def test_parse_time_with_offset():

@@ -2,6 +2,8 @@
 
 from .common import best_day_pct, daily_pnl, equity_curve, mean, r_coverage
 
+BE_USD = 10.0  # 損益絕對值在這以內算保本出場（使用者推保本後被掃通常正負 10 美元）
+
 
 def max_drawdown(equity: list[dict]) -> float:
     peak, dd = 0.0, 0.0
@@ -22,10 +24,9 @@ def excursion(trades: list[dict]) -> dict:
     mfe = [t["mfe_pts"] for t in trades if t["mfe_pts"] is not None]
     mae = [t["mae_pts"] for t in trades if t["mae_pts"] is not None]
     caps = [pnl_pts(t) / t["mfe_pts"] for t in trades if t["mfe_pts"] and pnl_pts(t) > 0]
-    # 推保本後被掃出場（出場點數 <= 0）：看推 BE 是否推太早，附那些交易原本的平均 MFE
-    be = [t for t in trades if t["moved_to_be"]]
-    be_stopped = [t for t in be if pnl_pts(t) <= 0]
-    be_stopped_mfe = [t["mfe_pts"] for t in be_stopped if t["mfe_pts"] is not None]
+    # 保本出場：損益在正負 BE_USD 美元內就當作推保本後被掃。附那些交易原本的平均 MFE，看推 BE 是否推太早
+    be = [t for t in trades if abs(t["pnl"]) <= BE_USD]
+    be_mfe = [t["mfe_pts"] for t in be if t["mfe_pts"] is not None]
     per_trade = [
         {"id": t["id"], "exit_time": t["exit_time"], "contract": t["contract"], "direction": t["direction"],
          "mfe": t["mfe_pts"], "mae": t["mae_pts"], "got": round(pnl_pts(t), 2)}
@@ -34,8 +35,7 @@ def excursion(trades: list[dict]) -> dict:
     return {
         "trades": per_trade,
         "be_count": len(be),
-        "be_stopped": len(be_stopped),
-        "be_stopped_avg_mfe_pts": round(mean(be_stopped_mfe), 2) if be_stopped_mfe else None,
+        "be_avg_mfe_pts": round(mean(be_mfe), 2) if be_mfe else None,
         "with_mfe": len(mfe),
         "with_mae": len(mae),
         "avg_mfe_pts": round(mean(mfe), 2) if mfe else None,

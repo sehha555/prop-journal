@@ -37,7 +37,7 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
             <span className="text-red">{fmtMoney(d?.avg_loss, { decimals: 0 })}</span>
           </span>
         } />
-        <StatCard size="md" label="推保本後被掃" value={ex ? `${ex.be_stopped} / ${ex.be_count}` : "—"} hint="被掃 / 有推保本的筆數" />
+        <StatCard size="md" label="保本出場" value={ex ? String(ex.be_count) : "—"} hint={ex?.be_avg_mfe_pts != null ? `損益正負 10 美元內；這些單平均曾賺 ${ex.be_avg_mfe_pts} 點` : "損益正負 10 美元內"} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Panel title="權益曲線" hint="每日累積">

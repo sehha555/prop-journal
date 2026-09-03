@@ -54,12 +54,12 @@ def insert_trade(conn: sqlite3.Connection, t: TradeIn) -> int | None:
         cur = conn.execute(
             """INSERT INTO trades (account_id, external_id, contract, symbol_root, direction, size,
                entry_time, exit_time, entry_price, exit_price, pnl, commissions, fees,
-               planned_stop_pts, mfe_pts, mae_pts, moved_to_be, setup, note, risk_usd, r_multiple, session)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+               planned_stop_pts, mfe_pts, mae_pts, setup, note, risk_usd, r_multiple, session)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (t.account_id, ext, t.contract.upper(), d["symbol_root"], t.direction, t.size,
              parse_iso(t.entry_time).isoformat(), parse_iso(t.exit_time).isoformat(),
              t.entry_price, t.exit_price, t.pnl, t.commissions, t.fees,
-             t.planned_stop_pts, t.mfe_pts, t.mae_pts, int(t.moved_to_be), t.setup, t.note, d["risk_usd"], d["r_multiple"], d["session"]),
+             t.planned_stop_pts, t.mfe_pts, t.mae_pts, t.setup, t.note, d["risk_usd"], d["r_multiple"], d["session"]),
         )
     except sqlite3.IntegrityError:
         return None
