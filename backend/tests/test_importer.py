@@ -59,7 +59,7 @@ def test_mfe_mae_patch_and_stats(client, account):
 
 
 def test_be_stats(client, account):
-    """保本出場自動判：賺賠不到計畫風險一半（250 的一半 = 125）算保本，不用手動勾"""
+    """保本出場自動判：只小賠（賠不到計畫風險一半，250 的一半 = 125）算保本；小賺不算"""
     files = {"file": ("t.csv", SAMPLE.read_bytes(), "text/csv")}
     client.post("/api/trades/import", data={"account_name": account["name"]}, files=files)
     before = client.get("/api/stats/performance").json()["excursion"]["be_count"]
@@ -67,7 +67,8 @@ def test_be_stats(client, account):
             "entry_time": "2026-08-20T14:00:00Z", "exit_time": "2026-08-20T14:05:00Z",
             "entry_price": 20000, "exit_price": 20000, "mfe_pts": 12}
     client.post("/api/trades", json={**base, "pnl": -40})
-    client.post("/api/trades", json={**base, "pnl": 60, "mfe_pts": 20})
+    client.post("/api/trades", json={**base, "pnl": -120})
+    client.post("/api/trades", json={**base, "pnl": 60})
     client.post("/api/trades", json={**base, "pnl": -130})
     ex = client.get("/api/stats/performance").json()["excursion"]
     assert ex["be_count"] == before + 2
