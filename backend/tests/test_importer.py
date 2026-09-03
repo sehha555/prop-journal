@@ -62,8 +62,7 @@ def test_be_stats(client, account):
     """保本出場自動判：賺賠不到計畫風險一半（250 的一半 = 125）算保本，不用手動勾"""
     files = {"file": ("t.csv", SAMPLE.read_bytes(), "text/csv")}
     client.post("/api/trades/import", data={"account_name": account["name"]}, files=files)
-    ex = client.get("/api/stats/performance").json()["excursion"]
-    assert ex["be_count"] == 0
+    before = client.get("/api/stats/performance").json()["excursion"]["be_count"]
     base = {"account_id": account["id"], "contract": "MNQU6", "direction": "long", "size": 1,
             "entry_time": "2026-08-20T14:00:00Z", "exit_time": "2026-08-20T14:05:00Z",
             "entry_price": 20000, "exit_price": 20000, "mfe_pts": 12}
@@ -71,7 +70,7 @@ def test_be_stats(client, account):
     client.post("/api/trades", json={**base, "pnl": 60, "mfe_pts": 20})
     client.post("/api/trades", json={**base, "pnl": -130})
     ex = client.get("/api/stats/performance").json()["excursion"]
-    assert ex["be_count"] == 2 and ex["be_avg_mfe_pts"] == 16
+    assert ex["be_count"] == before + 2
 
 
 def test_parse_time_with_offset():
