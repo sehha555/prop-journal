@@ -123,3 +123,20 @@ def test_auto_import_scan(client, account, tmp_path):
     assert (done / "trades_export-3.csv").exists() and not (dl / "trades_export-3.csv").exists()
     assert (dl / "trades_export-bad.csv").exists() and (dl / "other.csv").exists()
     assert len(client.get("/api/trades").json()) == 3
+
+
+def test_auto_import_purge(tmp_path):
+    """已匯入資料夾：超過 2 天的檔刪掉，新的留著，不相干的檔不碰"""
+    import os
+    from app import auto_import
+    done = tmp_path / "done"
+    done.mkdir()
+    now = 1_800_000_000
+    old = done / "trades_export-old.csv"
+    fresh = done / "trades_export-new.csv"
+    other = done / "other.csv"
+    for f, age in ((old, 3), (fresh, 1), (other, 10)):
+        f.write_bytes(b"x")
+        os.utime(f, (now - age * 86400, now - age * 86400))
+    assert auto_import.purge(done, 2, now) == ["trades_export-old.csv"]
+    assert not old.exists() and fresh.exists() and other.exists()

@@ -1,5 +1,5 @@
 """Downloads 自動匯入：找 ~/Downloads 裡 TopstepX 匯出的 trades_export*.csv，匯進日誌後
-把檔案搬到「prop-journal 已匯入」子資料夾，避免重複處理。由 launchd 監看 Downloads 觸發，
+把檔案搬到「prop-journal 已匯入」子資料夾，避免重複處理；搬進去超過 KEEP_DAYS 天的檔會順手刪掉。由 launchd 監看 Downloads 觸發，
 也可以手動跑：.venv/bin/python -m app.auto_import
 
 CSV 沒有帳戶欄，一律匯到 DEFAULT_ACCOUNT。換帳戶（例如過關後拿到 funded）改這裡。
@@ -9,6 +9,7 @@ import glob
 import logging
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from .db import DB_PATH, init_db
@@ -18,6 +19,7 @@ DEFAULT_ACCOUNT = "50K combine"
 DOWNLOADS = Path.home() / "Downloads"
 DONE_DIR = DOWNLOADS / "prop-journal 已匯入"
 LOG_PATH = DB_PATH.parent / "auto_import.log"
+KEEP_DAYS = 2  # 已匯入的檔留幾天再刪
 
 
 def notify(title: str, text: str) -> None:
@@ -47,10 +49,24 @@ def scan(downloads: Path = DOWNLOADS, done_dir: Path = DONE_DIR, account: str = 
     return results
 
 
+def purge(done_dir: Path = DONE_DIR, keep_days: int = KEEP_DAYS, now: float | None = None) -> list[str]:
+    """刪掉已匯入資料夾裡搬進來超過 keep_days 的檔，回刪掉的檔名"""
+    cutoff = (now or time.time()) - keep_days * 86400
+    removed = []
+    for path in sorted(done_dir.glob("trades_export*.csv")):
+        if path.stat().st_mtime < cutoff:
+            path.unlink()
+            removed.append(path.name)
+    if removed:
+        logging.info("清掉 %d 個超過 %d 天的已匯入檔：%s", len(removed), keep_days, "、".join(removed))
+    return removed
+
+
 def main() -> None:
     logging.basicConfig(filename=LOG_PATH, level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     init_db()
     results = scan()
+    purge()
     for r in results:
         if "error" in r:
             notify("prop-journal 匯入失敗", f"{r['file']}：{r['error']}")
