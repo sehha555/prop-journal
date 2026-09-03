@@ -1,5 +1,5 @@
 "use client";
-// 績效分頁：6 張卡 + 權益曲線 / 每日 P&L / 持倉過程圖
+// 績效分頁：7 張卡 + 權益曲線 / 每日 P&L / 持倉過程圖
 import StatCard from "@/components/ui/StatCard";
 import EquityChart from "@/components/charts/EquityChart";
 import DailyBars from "@/components/charts/DailyBars";
@@ -25,7 +25,7 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
   const ex = d?.excursion;
   return (
     <>
-      <div className="grid grid-cols-6 gap-3">
+      <div className="grid grid-cols-7 gap-3">
         <StatCard size="md" label="總 P&L" value={d ? fmtMoney(d.total_pnl, { sign: true }) : "—"} valueClass={pnlColor(d?.total_pnl)} hint={d ? `${d.trade_count} 筆` : undefined} />
         <StatCard size="md" label="勝率" value={fmtPct(d?.win_rate)} />
         <StatCard size="md" label="Profit Factor" value={fmtNum(d?.profit_factor)} hint="毛利 / 毛損，> 1.5 算穩" />
@@ -37,6 +37,7 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
             <span className="text-red">{fmtMoney(d?.avg_loss, { decimals: 0 })}</span>
           </span>
         } />
+        <StatCard size="md" label="上頭的單" value={d ? String(d.tilt_count) : "—"} valueClass={d?.tilt_count ? "text-red" : undefined} hint={d?.tilt_count ? `合計 ${fmtMoney(d.tilt_pnl, { sign: true })}` : "編輯交易時勾「上頭」"} />
         <StatCard size="md" label="保本出場" value={ex ? String(ex.be_count) : "—"} hint={ex?.be_avg_mfe_pts != null ? `只小賠（不到計畫風險一半）的單；這些單平均曾賺 ${ex.be_avg_mfe_pts} 點` : "只小賠（不到計畫風險一半）的單"} />
       </div>
       <div className="grid grid-cols-2 gap-3">

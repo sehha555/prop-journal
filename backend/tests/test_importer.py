@@ -141,3 +141,17 @@ def test_auto_import_purge(tmp_path):
         os.utime(f, (now - age * 86400, now - age * 86400))
     assert auto_import.purge(done, 2, now) == ["trades_export-old.csv"]
     assert not old.exists() and fresh.exists() and other.exists()
+
+
+def test_tilt(client, account):
+    """上頭勾選：預設 0、patch 寫得回去（含取消）、績效頁算筆數與合計損益"""
+    files = {"file": ("t.csv", SAMPLE.read_bytes(), "text/csv")}
+    client.post("/api/trades/import", data={"account_name": account["name"]}, files=files)
+    trades = client.get("/api/trades").json()
+    assert all(t["tilt"] == 0 for t in trades)
+    loser = next(t for t in trades if t["pnl"] < 0)
+    assert client.patch(f"/api/trades/{loser['id']}", json={"tilt": True}).json()["tilt"] == 1
+    d = client.get("/api/stats/performance").json()
+    assert d["tilt_count"] == 1 and d["tilt_pnl"] == loser["pnl"]
+    assert client.patch(f"/api/trades/{loser['id']}", json={"tilt": False}).json()["tilt"] == 0
+    assert client.get("/api/stats/performance").json()["tilt_count"] == 0

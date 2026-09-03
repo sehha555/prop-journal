@@ -24,6 +24,7 @@ export default function JournalDrawer({
   const [stop, setStop] = useState(trade?.planned_stop_pts != null ? String(trade.planned_stop_pts) : "");
   const [mfe, setMfe] = useState(trade?.mfe_pts != null ? String(trade.mfe_pts) : "");
   const [mae, setMae] = useState(trade?.mae_pts != null ? String(trade.mae_pts) : "");
+  const [tilt, setTilt] = useState(trade?.tilt === 1);
   const [setup, setSetup] = useState(trade?.setup ?? "");
   const [newSetup, setNewSetup] = useState("");
   const [note, setNote] = useState(trade?.note ?? "");
@@ -64,6 +65,7 @@ export default function JournalDrawer({
         planned_stop_pts: stopNum,
         mfe_pts: mfeNum,
         mae_pts: maeNum,
+        tilt,
         setup: setupName,
         note: note || null,
       });
@@ -112,6 +114,10 @@ export default function JournalDrawer({
             <input className="input num" type="number" min="0" step="any" value={mae} onChange={(e) => setMae(e.target.value)} placeholder="例 8" />
           </Field>
         </div>
+        <label className="flex items-center gap-2 text-[12px] font-semibold text-muted">
+          <input type="checkbox" checked={tilt} onChange={(e) => setTilt(e.target.checked)} />
+          上頭（情緒失控下的單）
+        </label>
         <Field label="Setup">
           <select className="input" value={setup} onChange={(e) => setSetup(e.target.value)}>
             <option value="">— 未標 —</option>

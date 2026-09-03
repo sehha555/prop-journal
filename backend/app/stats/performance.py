@@ -57,7 +57,10 @@ def compute(trades: list[dict]) -> dict:
     losses = [t["pnl"] for t in trades if t["pnl"] < 0]
     gross_win, gross_loss = sum(wins), -sum(losses)
     eq = equity_curve(trades)
+    tilt = [t["pnl"] for t in trades if t["tilt"]]
     return {
+        "tilt_count": len(tilt),
+        "tilt_pnl": round(sum(tilt), 2),
         "r_coverage": r_coverage(trades),
         "total_pnl": round(sum(t["pnl"] for t in trades), 2),
         "trade_count": len(trades),

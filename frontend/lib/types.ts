@@ -35,6 +35,7 @@ export interface Trade {
   planned_stop_pts: number | null;
   mfe_pts: number | null;
   mae_pts: number | null;
+  tilt: 0 | 1;
   setup: string | null;
   note: string | null;
   risk_usd: number | null;
@@ -110,6 +111,8 @@ export interface PerformanceStats {
   max_loss: number | null;
   max_drawdown: number | null;
   best_day_pct: number | null;
+  tilt_count: number;
+  tilt_pnl: number;
   excursion: {
     with_mfe: number;
     with_mae: number;
