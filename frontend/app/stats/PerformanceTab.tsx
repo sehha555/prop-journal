@@ -1,26 +1,58 @@
 "use client";
 // 績效分頁：7 張卡 + 權益曲線 / 每日 P&L / 持倉過程圖
+import { useState } from "react";
 import StatCard from "@/components/ui/StatCard";
 import EquityChart from "@/components/charts/EquityChart";
 import DailyBars from "@/components/charts/DailyBars";
 import ExcursionChart from "@/components/charts/ExcursionChart";
 import MaeBars from "@/components/charts/MaeBars";
+import { apiSend, errorMessage } from "@/lib/api";
 import { fmtMoney, fmtNum, fmtPct, pnlColor } from "@/lib/format";
 import type { PerformanceStats } from "@/lib/types";
 
-function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function Panel({ title, hint, action, children }: { title: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="card flex flex-col gap-2 px-[18px] py-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div className="text-[14px] font-bold text-white">{title}</div>
-        {hint && <div className="text-[11px] font-semibold text-muted">{hint}</div>}
+        <div className="flex items-center gap-3">
+          {hint && <div className="text-[11px] font-semibold text-muted">{hint}</div>}
+          {action}
+        </div>
       </div>
       {children}
     </div>
   );
 }
 
-export default function PerformanceTab({ data }: { data: PerformanceStats | null }) {
+// 重算按鈕：呼叫後端用真實 K 棒把每筆的 MFE / MAE 全部重抓，跑完通知父層重載
+function RecalcButton({ onDone }: { onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const run = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const r = await apiSend<{ updated: number; no_data: number }>("POST", "/trades/excursion", { force: true });
+      setMsg(`重算 ${r.updated} 筆` + (r.no_data ? `，${r.no_data} 筆沒 K 棒` : ""));
+      onDone();
+    } catch (e) {
+      setMsg(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="flex items-center gap-2">
+      {msg && <span className="text-[11px] font-semibold text-muted">{msg}</span>}
+      <button type="button" className="btn btn-sm" disabled={busy} onClick={run}>
+        {busy ? "抓 K 棒中…" : "重算"}
+      </button>
+    </div>
+  );
+}
+
+export default function PerformanceTab({ data, onReload }: { data: PerformanceStats | null; onReload: () => void }) {
   const d = data;
   const ex = d?.excursion;
   return (
@@ -51,6 +83,7 @@ export default function PerformanceTab({ data }: { data: PerformanceStats | null
       <Panel
         title="持倉過程"
         hint={ex ? `綠柱 = 最多曾賺 · 紅柱 = 最多曾賠 · 白點 = 實際拿到（點）· 獲利單賺到手 ${fmtPct(ex.mfe_capture_pct)} · ${ex.with_mfe} / ${d?.trade_count} 筆有資料` : undefined}
+        action={<RecalcButton onDone={onReload} />}
       >
         <ExcursionChart data={ex?.trades ?? []} height={220} />
       </Panel>

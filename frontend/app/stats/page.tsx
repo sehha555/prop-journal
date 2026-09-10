@@ -29,8 +29,9 @@ export default function StatsPage() {
   const [sess, setSess] = useState<SessionStats | null>(null);
   const [cons, setCons] = useState<ConsistencyStats | null>(null);
   const [cal, setCal] = useState<CalendarDay[] | null>(null);
+  const [reloadKey, setReloadKey] = useState(0); // 重算持倉過程後 +1 觸發重抓
 
-  // 切 tab 或改篩選就重抓該 tab 的資料
+  // 切 tab、改篩選、或子元件要求重載就重抓該 tab 的資料
   useEffect(() => {
     const q = filterQuery(filter);
     let cancelled = false;
@@ -49,7 +50,7 @@ export default function StatsPage() {
     return () => {
       cancelled = true;
     };
-  }, [tab, filter]);
+  }, [tab, filter, reloadKey]);
 
   const coverage: RCoverage | undefined =
     tab === "performance" ? perf?.r_coverage : tab === "sessions" ? sess?.r_coverage : tab === "consistency" ? cons?.r_coverage : undefined;
@@ -92,7 +93,7 @@ export default function StatsPage() {
         </div>
       )}
 
-      {tab === "performance" && <PerformanceTab data={perf} />}
+      {tab === "performance" && <PerformanceTab data={perf} onReload={() => setReloadKey((k) => k + 1)} />}
       {tab === "sessions" && <SessionsTab data={sess} />}
       {tab === "consistency" && <ConsistencyTab data={cons} />}
       {tab === "calendar" && <CalendarTab days={cal} />}
