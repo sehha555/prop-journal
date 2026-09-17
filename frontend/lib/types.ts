@@ -114,6 +114,23 @@ export interface CalendarDay {
   count: number;
 }
 
+// 不靠 R 的原始數字：分批進場合併後，賺的 / 賠的單各自平均
+export interface RawSide {
+  count: number;
+  avg_usd: number | null;
+  avg_pts: number | null;
+  avg_size: number | null;
+  min_size: number | null;
+  max_size: number | null;
+}
+
+export interface RawSummary {
+  positions: number;
+  win: RawSide;
+  loss: RawSide;
+  payoff: number | null;
+}
+
 export interface PerformanceStats {
   r_coverage: RCoverage;
   total_pnl: number;
@@ -128,6 +145,7 @@ export interface PerformanceStats {
   best_day_pct: number | null;
   tilt_count: number;
   tilt_pnl: number;
+  raw: RawSummary;
   excursion: {
     with_mfe: number;
     with_mae: number;

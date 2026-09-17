@@ -1,6 +1,8 @@
 """A 基本績效。"""
 
-from ..trades_core import DEFAULT_RISK_USD
+from datetime import timedelta
+
+from ..trades_core import DEFAULT_RISK_USD, parse_iso
 from .common import best_day_pct, daily_pnl, equity_curve, mean, r_coverage
 
 
@@ -52,6 +54,45 @@ def excursion(trades: list[dict]) -> dict:
     }
 
 
+def positions(trades: list[dict]) -> list[dict]:
+    """把分批進場合成一筆：同帳戶、同方向、同出場時間，進場在第一筆的 60 秒內。
+    回 {pnl, size, pts}，pts 是依口數加權的平均點數（賺正賠負）。"""
+    out: list[dict] = []
+    for t in sorted(trades, key=lambda t: t["entry_time"]):
+        entry = parse_iso(t["entry_time"])
+        last = out[-1] if out else None
+        if (last and last["key"] == (t["account_id"], t["direction"], t["exit_time"])
+                and entry - last["entry"] <= timedelta(seconds=60)):
+            last["pnl"] += t["pnl"]
+            last["pts_x_size"] += pnl_pts(t) * t["size"]
+            last["size"] += t["size"]
+        else:
+            out.append({"key": (t["account_id"], t["direction"], t["exit_time"]), "entry": entry,
+                        "pnl": t["pnl"], "size": t["size"], "pts_x_size": pnl_pts(t) * t["size"]})
+    return [{"pnl": p["pnl"], "size": p["size"], "pts": p["pts_x_size"] / p["size"]} for p in out]
+
+
+def raw_summary(trades: list[dict]) -> dict:
+    """不靠 R：賺的單、賠的單各自的平均金額 / 點數 / 口數。分批進場先合併。"""
+    ps = positions(trades)
+
+    def side(xs: list[dict]) -> dict:
+        if not xs:
+            return {"count": 0, "avg_usd": None, "avg_pts": None, "avg_size": None, "min_size": None, "max_size": None}
+        return {
+            "count": len(xs),
+            "avg_usd": round(mean([p["pnl"] for p in xs]), 2),
+            "avg_pts": round(abs(mean([p["pts"] for p in xs])), 2),
+            "avg_size": round(mean([p["size"] for p in xs]), 1),
+            "min_size": min(p["size"] for p in xs),
+            "max_size": max(p["size"] for p in xs),
+        }
+
+    win, loss = side([p for p in ps if p["pnl"] > 0]), side([p for p in ps if p["pnl"] <= 0])
+    payoff = round(win["avg_usd"] / -loss["avg_usd"], 2) if win["avg_usd"] and loss["avg_usd"] else None
+    return {"positions": len(ps), "win": win, "loss": loss, "payoff": payoff}
+
+
 def compute(trades: list[dict]) -> dict:
     wins = [t["pnl"] for t in trades if t["pnl"] > 0]
     losses = [t["pnl"] for t in trades if t["pnl"] < 0]
@@ -73,6 +114,7 @@ def compute(trades: list[dict]) -> dict:
         "max_drawdown": max_drawdown(eq),
         "best_day_pct": best_day_pct(trades),
         "excursion": excursion(trades),
+        "raw": raw_summary(trades),
         "equity": eq,
         "daily": [{"date": d, "pnl": round(v, 2)} for d, v in daily_pnl(trades).items()],
     }

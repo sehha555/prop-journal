@@ -119,3 +119,23 @@ def test_calendar(client, seeded):
     assert [d["date"] for d in days] == ["2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06", "2026-08-07"]
     assert days[0] == {"date": "2026-08-03", "pnl": 20, "count": 2}
     assert days[2]["pnl"] == 10 and days[3]["pnl"] == -10
+
+
+def test_raw_summary_merges_scale_ins():
+    from app.stats.performance import raw_summary
+
+    def t(entry, exit, size, ep, xp, pnl, direction="short"):
+        return {"account_id": 1, "direction": direction, "entry_time": entry, "exit_time": exit,
+                "size": size, "entry_price": ep, "exit_price": xp, "pnl": pnl}
+
+    x = "2026-09-03T13:38:18+00:00"
+    r = raw_summary([
+        # 分批空 3 口 + 3 口，同出場 → 合成 6 口；賠 (54.5×3 + 60.75×3)/6 = 57.625 點
+        t("2026-09-03T13:36:26+00:00", x, 3, 29219.0, 29273.5, -327.0),
+        t("2026-09-03T13:36:30+00:00", x, 3, 29212.75, 29273.5, -364.5),
+        # 另一筆賺的：多 10 口賺 20 點
+        t("2026-09-04T13:00:00+00:00", "2026-09-04T13:05:00+00:00", 10, 100, 120, 400, "long"),
+    ])
+    assert r["positions"] == 2 and r["payoff"] == round(400 / 691.5, 2)
+    assert r["loss"] == {"count": 1, "avg_usd": -691.5, "avg_pts": 57.62, "avg_size": 6, "min_size": 6, "max_size": 6}
+    assert r["win"]["avg_pts"] == 20 and r["win"]["avg_size"] == 10

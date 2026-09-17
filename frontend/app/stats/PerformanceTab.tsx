@@ -1,5 +1,5 @@
 "use client";
-// 績效分頁：7 張卡 + 權益曲線 / 每日 P&L / 持倉過程圖
+// 績效分頁：原始數字表 + 7 張卡 + 權益曲線 / 每日 P&L / 持倉過程圖
 import { useState } from "react";
 import StatCard from "@/components/ui/StatCard";
 import EquityChart from "@/components/charts/EquityChart";
@@ -8,7 +8,7 @@ import ExcursionChart from "@/components/charts/ExcursionChart";
 import MaeBars from "@/components/charts/MaeBars";
 import { apiSend, errorMessage } from "@/lib/api";
 import { fmtMoney, fmtNum, fmtPct, pnlColor } from "@/lib/format";
-import type { PerformanceStats } from "@/lib/types";
+import type { PerformanceStats, RawSide, RawSummary } from "@/lib/types";
 
 function Panel({ title, hint, action, children }: { title: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -52,11 +52,46 @@ function RecalcButton({ onDone }: { onDone: () => void }) {
   );
 }
 
+// 賺的單 / 賠的單：平均金額、點數、口數。分批進場已在後端合併成一筆
+function RawTable({ raw }: { raw: RawSummary | undefined }) {
+  const row = (label: string, s: RawSide | undefined, color: string) => (
+    <tr className="border-b border-line">
+      <td className={`py-1.5 pr-2 ${color}`}>{label}</td>
+      <td className="num py-1.5 pr-2 text-right">{s ? s.count : "—"}</td>
+      <td className={`num py-1.5 pr-2 text-right ${color}`}>{fmtMoney(s?.avg_usd, { sign: true, decimals: 0 })}</td>
+      <td className="num py-1.5 pr-2 text-right">{fmtNum(s?.avg_pts)}</td>
+      <td className="num py-1.5 pr-2 text-right">{fmtNum(s?.avg_size, 1)}</td>
+      <td className="num py-1.5 pr-2 text-right">{s?.min_size != null ? `${s.min_size}~${s.max_size}` : "—"}</td>
+    </tr>
+  );
+  return (
+    <Panel title="賺的單 vs 賠的單" hint={raw ? `${raw.positions} 次進出（分批進場算 1 次）· 賺賠比 ${fmtNum(raw.payoff)}` : undefined}>
+      <table className="w-full border-collapse text-[12px] font-semibold">
+        <thead>
+          <tr className="th border-b border-line text-left">
+            <th className="py-1.5 pr-2 font-bold"></th>
+            <th className="py-1.5 pr-2 text-right font-bold">筆數</th>
+            <th className="py-1.5 pr-2 text-right font-bold">平均金額</th>
+            <th className="py-1.5 pr-2 text-right font-bold">平均點數</th>
+            <th className="py-1.5 pr-2 text-right font-bold">平均口數</th>
+            <th className="py-1.5 pr-2 text-right font-bold">口數範圍</th>
+          </tr>
+        </thead>
+        <tbody>
+          {row("賺的單", raw?.win, "text-green")}
+          {row("賠的單", raw?.loss, "text-red")}
+        </tbody>
+      </table>
+    </Panel>
+  );
+}
+
 export default function PerformanceTab({ data, onReload }: { data: PerformanceStats | null; onReload: () => void }) {
   const d = data;
   const ex = d?.excursion;
   return (
     <>
+      <RawTable raw={d?.raw} />
       <div className="grid grid-cols-7 gap-3">
         <StatCard size="md" label="總 P&L" value={d ? fmtMoney(d.total_pnl, { sign: true }) : "—"} valueClass={pnlColor(d?.total_pnl)} hint={d ? `${d.trade_count} 筆` : undefined} />
         <StatCard size="md" label="勝率" value={fmtPct(d?.win_rate)} />
