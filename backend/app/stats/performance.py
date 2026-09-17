@@ -29,7 +29,7 @@ def excursion(trades: list[dict]) -> dict:
     mfe = [t["mfe_pts"] for t in trades if t["mfe_pts"] is not None]
     mae = [t["mae_pts"] for t in trades if t["mae_pts"] is not None]
     caps = [pnl_pts(t) / t["mfe_pts"] for t in trades if t["mfe_pts"] and pnl_pts(t) > 0]
-    # 保本出場：只小賠（賠不到計畫風險一半，停損 250 就是賠 125 內）當作推保本後被掃，
+    # 保本出場：只小賠（賠不到計畫風險一半，停損 400 就是賠 200 內）當作推保本後被掃，
     # 跟 trades_core.auto_stop_pts 同一條線。賺的不算：移動停損可能鎖到 1R、2R，分不出是不是 BE。
     # 附那些交易原本的平均 MFE，看推 BE 是否推太早
     be = [t for t in trades if is_be(t)]

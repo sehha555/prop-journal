@@ -16,9 +16,9 @@ def parse_iso(s: str) -> datetime:
     return dt
 
 
-# 使用者的停損習慣：每筆抓 250 美元。虧損單直接用實際賠的金額當停損（會多一點少一點），
-# 獲利單和只小賠的單（賠不到一半，通常是推保本後掃出）用 250 算。
-DEFAULT_RISK_USD = 250.0
+# 使用者的停損習慣：每筆壓在 400 美元內（2026-09-17 起，之前抓 250）。虧損單直接用實際賠的金額當停損，
+# 獲利單和只小賠的單（賠不到一半，通常是推保本後掃出）用上限 400 算，R 寧可算保守。
+DEFAULT_RISK_USD = 400.0
 
 
 def auto_stop_pts(contract: str, size: int, pnl: float) -> float | None:
