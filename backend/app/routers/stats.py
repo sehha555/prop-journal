@@ -6,7 +6,7 @@ from ..db import get_conn
 from ..models import Filters
 from ..sessions import NY
 from ..stats import consistency, performance, sessions
-from ..stats.common import best_day_pct, daily_summary, equity_curve
+from ..stats.common import account_curve, best_day_pct, daily_summary, equity_curve
 from ..trades_core import fetch_trades
 
 router = APIRouter(prefix="/api", tags=["stats"])
@@ -59,6 +59,7 @@ def dashboard():
             "trade_count": len(ts),
             "best_day_pct": best_day_pct(ts),
             "last_trade_at": max((t["exit_time"] for t in ts), default=None),
+            "curve": account_curve(ts, a["starting_balance"]),
         })
 
     spent = sum(e["amount"] for e in expenses if e["kind"] != "payout")

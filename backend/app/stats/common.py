@@ -49,6 +49,29 @@ def equity_curve(trades: list[dict]) -> list[dict]:
     return out
 
 
+# Topstep 50K 規則（官方說明：MLL 跟最高收盤餘額、DLL 只有 DLL 方案才有）
+MLL_50K = 2000.0
+DLL_50K = 1000.0
+
+
+def account_curve(trades: list[dict], starting_balance: float) -> list[dict]:
+    """單一帳戶的每日收盤餘額（扣手續費）與當天生效的 Topstep 回撤線。
+    mll：最高收盤餘額（含起始）- 2,000，只往上，跟到起始餘額就鎖住（combine 50,000、XFA 0）。
+    dll：前一日收盤餘額 - 1,000，參考用。"""
+    net: dict[str, float] = defaultdict(float)
+    for t in trades:
+        net[t["ny_date"]] += t["pnl"] - t["commissions"] - t["fees"]
+    balance = peak = starting_balance
+    out = []
+    for day, pnl in sorted(net.items()):
+        mll = min(peak - MLL_50K, starting_balance)
+        dll = balance - DLL_50K
+        balance += pnl
+        peak = max(peak, balance)
+        out.append({"date": day, "balance": round(balance, 2), "mll": round(mll, 2), "dll": round(dll, 2)})
+    return out
+
+
 def best_day_pct(trades: list[dict]) -> float | None:
     """單日最佳獲利佔總獲利 %（Topstep 出金規則）。總獲利 <= 0 回 None。"""
     days = daily_pnl(trades)

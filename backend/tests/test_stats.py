@@ -97,6 +97,21 @@ def test_dashboard(seeded, account, monkeypatch):
     a = d["accounts"][0]
     assert a["balance"] == 50050 and a["trade_count"] == 10 and a["win_rate"] == 50.0
     assert d["month"]["blown_r_count"] == 1 and d["month"]["missing_r_count"] == 0
+    assert len(a["curve"]) == 5 and a["curve"][-1]["balance"] == 50050
+
+
+def test_account_curve():
+    from app.stats.common import account_curve
+
+    t = lambda day, pnl: {"ny_date": day, "pnl": pnl, "commissions": 1, "fees": 1}
+    # 起始 50,000：+1,002 → 51,000、+2,002 → 53,000（MLL 本該到 51,000，鎖在 50,000）、-1,498 → 51,500
+    c = account_curve([t("d1", 1002), t("d2", 2002), t("d3", -1498)], 50000)
+    assert [p["balance"] for p in c] == [51000, 53000, 51500]
+    assert [p["mll"] for p in c] == [48000, 49000, 50000]
+    assert [p["dll"] for p in c] == [49000, 50000, 52000]
+    # XFA 從 0 開始，MLL 從 -2,000 往上跟、鎖在 0
+    x = account_curve([t("d1", -498), t("d2", 3002)], 0)
+    assert [p["mll"] for p in x] == [-2000, -2000] and x[-1]["balance"] == 2500
 
 
 def test_calendar(client, seeded):

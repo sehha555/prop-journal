@@ -65,7 +65,16 @@ export interface EquityPoint {
   cum_pnl: number;
 }
 
+// 單一帳戶每日收盤餘額（扣手續費）+ 當天生效的 Topstep MLL / DLL
+export interface AccountCurvePoint {
+  date: string;
+  balance: number;
+  mll: number;
+  dll: number;
+}
+
 export interface DashboardAccount extends Account {
+  curve: AccountCurvePoint[];
   balance: number;
   pnl: number;
   win_rate: number | null;

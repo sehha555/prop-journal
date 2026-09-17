@@ -15,7 +15,12 @@ import type { AccountStatus, Dashboard, DashboardAccount } from "@/lib/types";
 import { useAppStore } from "@/store";
 import { useLoader } from "@/lib/useLoader";
 
-function AccountCard({ a, onStatus }: { a: DashboardAccount; onStatus: (id: number, s: AccountStatus) => void }) {
+function AccountCard({ a, selected, onSelect, onStatus }: {
+  a: DashboardAccount;
+  selected: boolean;
+  onSelect: () => void;
+  onStatus: (id: number, s: AccountStatus) => void;
+}) {
   const dim = a.status === "failed" || a.status === "closed";
   const tone = a.status === "failed" || a.status === "closed" ? "muted" : a.kind === "funded" ? "green" : "gold";
   const badgeText = a.status === "active" || a.status === "passed" ? a.kind.toUpperCase() : a.status.toUpperCase();
@@ -41,7 +46,10 @@ function AccountCard({ a, onStatus }: { a: DashboardAccount; onStatus: (id: numb
   }
 
   return (
-    <div className={"card flex flex-col gap-2.5 px-[18px] py-4" + (dim ? " opacity-55" : "")}>
+    <div
+      className={"card flex cursor-pointer flex-col gap-2.5 px-[18px] py-4" + (dim ? " opacity-55" : "") + (selected ? " ring-2 ring-gold" : "")}
+      onClick={onSelect}
+    >
       <div className="flex items-center justify-between">
         <div className="text-[14px] font-bold text-white">
           {a.firm} · {a.name}
@@ -63,6 +71,7 @@ function AccountCard({ a, onStatus }: { a: DashboardAccount; onStatus: (id: numb
         <select
           className="input shrink-0 px-2 py-0.5 text-[11px]"
           value={a.status}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => onStatus(a.id, e.target.value as AccountStatus)}
           aria-label="帳戶狀態"
         >
@@ -78,6 +87,7 @@ function AccountCard({ a, onStatus }: { a: DashboardAccount; onStatus: (id: numb
 export default function DashboardPage() {
   const { data, error: err, setError: setErr, reload: load } = useLoader(() => apiGet<Dashboard>("/dashboard"));
   const [modal, setModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null); // null = 全部帳戶加總
   const loadAccounts = useAppStore((s) => s.loadAccounts);
 
   const changeStatus = async (id: number, status: AccountStatus) => {
@@ -91,6 +101,7 @@ export default function DashboardPage() {
   };
 
   const m = data?.month;
+  const selected = data?.accounts.find((a) => a.id === selectedId);
   const subtitle = data
     ? `${data.accounts.length} 個帳戶 · 最近匯入 ${data.last_import_at ? fmtLocal(data.last_import_at) : "—"}`
     : "載入中…";
@@ -123,7 +134,13 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-3 gap-3">
           {data?.accounts.map((a) => (
-            <AccountCard key={a.id} a={a} onStatus={changeStatus} />
+            <AccountCard
+              key={a.id}
+              a={a}
+              selected={a.id === selectedId}
+              onSelect={() => setSelectedId(a.id === selectedId ? null : a.id)}
+              onStatus={changeStatus}
+            />
           ))}
         </div>
       )}
@@ -132,9 +149,11 @@ export default function DashboardPage() {
         <div className="card flex flex-col gap-2 px-[18px] py-4">
           <div className="flex items-baseline justify-between">
             <div className="text-[14px] font-bold text-white">權益曲線</div>
-            <div className="text-[11px] font-semibold text-muted">全部帳戶 · 每日累積</div>
+            <div className="text-[11px] font-semibold text-muted">
+              {selected ? `${selected.name} · 收盤餘額 · 紅線 MLL · 灰線 DLL（參考）` : "全部帳戶 · 每日累積 · 點帳戶卡片切換"}
+            </div>
           </div>
-          <EquityChart data={data?.equity ?? []} />
+          <EquityChart data={selected ? selected.curve : (data?.equity ?? [])} />
         </div>
         <div className="card flex flex-col gap-2.5 px-[18px] py-4">
           <div className="text-[14px] font-bold text-white">本月 consistency</div>
