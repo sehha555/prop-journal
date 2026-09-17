@@ -15,7 +15,7 @@ from pathlib import Path
 from .db import DB_PATH, init_db
 from .routers.trades import run_import
 
-DEFAULT_ACCOUNT = "50K combine"
+DEFAULT_ACCOUNT = "ex"
 DOWNLOADS = Path.home() / "Downloads"
 DONE_DIR = DOWNLOADS / "prop-journal 已匯入"
 LOG_PATH = DB_PATH.parent / "auto_import.log"
