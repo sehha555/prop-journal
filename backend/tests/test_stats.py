@@ -139,3 +139,23 @@ def test_raw_summary_merges_scale_ins():
     assert r["positions"] == 2 and r["payoff"] == round(400 / 691.5, 2)
     assert r["loss"] == {"count": 1, "avg_usd": -691.5, "avg_pts": 57.62, "avg_size": 6, "min_size": 6, "max_size": 6}
     assert r["win"]["avg_pts"] == 20 and r["win"]["avg_size"] == 10
+
+
+def test_positions_merge_until_flat():
+    from app.stats.performance import positions
+
+    def t(entry, exit, size, pnl, direction="short", ep=100.0, xp=90.0):
+        return {"account_id": 1, "direction": direction, "entry_time": entry, "exit_time": exit,
+                "size": size, "entry_price": ep, "exit_price": xp, "pnl": pnl}
+
+    ps = positions([
+        # 空 6 口，5 分鐘後加空 2 口，中間先部分停利 3 口 → 全部平倉前都算同一筆
+        t("2026-09-10T13:00:00+00:00", "2026-09-10T13:03:00+00:00", 3, 300),
+        t("2026-09-10T13:00:00+00:00", "2026-09-10T13:20:00+00:00", 3, 300),
+        t("2026-09-10T13:05:00+00:00", "2026-09-10T13:20:00+00:00", 2, 200),
+        # 剛好在平倉那一秒再進場 → 新的一筆
+        t("2026-09-10T13:20:00+00:00", "2026-09-10T13:25:00+00:00", 4, -100),
+        # 反手做多（跟上一筆時間重疊也不併）
+        t("2026-09-10T13:22:00+00:00", "2026-09-10T13:30:00+00:00", 2, 50, "long", 90.0, 100.0),
+    ])
+    assert [(p["pnl"], p["size"]) for p in ps] == [(800, 8), (-100, 4), (50, 2)]

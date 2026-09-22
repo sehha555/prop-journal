@@ -1,7 +1,5 @@
 """A 基本績效。"""
 
-from datetime import timedelta
-
 from ..trades_core import DEFAULT_RISK_USD, parse_iso
 from .common import best_day_pct, daily_pnl, equity_curve, mean, r_coverage
 
@@ -55,19 +53,20 @@ def excursion(trades: list[dict]) -> dict:
 
 
 def positions(trades: list[dict]) -> list[dict]:
-    """把分批進場合成一筆：同帳戶、同方向、同出場時間，進場在第一筆的 60 秒內。
+    """把同一次進出合成一筆：同帳戶、同方向，進場時部位還沒出清（早於這組最晚的出場）就併進去。
+    分批加碼、部分停利都算同一筆，全部平倉才結束。
     回 {pnl, size, pts}，pts 是依口數加權的平均點數（賺正賠負）。"""
     out: list[dict] = []
-    for t in sorted(trades, key=lambda t: t["entry_time"]):
-        entry = parse_iso(t["entry_time"])
+    for t in sorted(trades, key=lambda t: (t["account_id"], t["entry_time"])):
+        entry, exit = parse_iso(t["entry_time"]), parse_iso(t["exit_time"])
         last = out[-1] if out else None
-        if (last and last["key"] == (t["account_id"], t["direction"], t["exit_time"])
-                and entry - last["entry"] <= timedelta(seconds=60)):
+        if last and last["key"] == (t["account_id"], t["direction"]) and entry < last["exit"]:
             last["pnl"] += t["pnl"]
             last["pts_x_size"] += pnl_pts(t) * t["size"]
             last["size"] += t["size"]
+            last["exit"] = max(last["exit"], exit)
         else:
-            out.append({"key": (t["account_id"], t["direction"], t["exit_time"]), "entry": entry,
+            out.append({"key": (t["account_id"], t["direction"]), "exit": exit,
                         "pnl": t["pnl"], "size": t["size"], "pts_x_size": pnl_pts(t) * t["size"]})
     return [{"pnl": p["pnl"], "size": p["size"], "pts": p["pts_x_size"] / p["size"]} for p in out]
 
