@@ -93,7 +93,7 @@ export default function PerformanceTab({ data, onReload }: { data: PerformanceSt
     <>
       <RawTable raw={d?.raw} />
       <div className="grid grid-cols-7 gap-3">
-        <StatCard size="md" label="總 P&L" value={d ? fmtMoney(d.total_pnl, { sign: true }) : "—"} valueClass={pnlColor(d?.total_pnl)} hint={d ? `${d.trade_count} 筆` : undefined} />
+        <StatCard size="md" label="總 P&L" value={d ? fmtMoney(d.total_pnl, { sign: true }) : "—"} valueClass={pnlColor(d?.total_pnl)} hint={d ? `${d.trade_count} 次進出（分批已合併）` : undefined} />
         <StatCard size="md" label="勝率" value={fmtPct(d?.win_rate)} />
         <StatCard size="md" label="Profit Factor" value={fmtNum(d?.profit_factor)} hint="毛利 / 毛損，> 1.5 算穩" />
         <StatCard size="md" label="最大回撤" value={d ? fmtMoney(d.max_drawdown !== null ? -Math.abs(d.max_drawdown) : null) : "—"} valueClass="text-red" />
@@ -117,7 +117,7 @@ export default function PerformanceTab({ data, onReload }: { data: PerformanceSt
       </div>
       <Panel
         title="持倉過程"
-        hint={ex ? `綠柱 = 最多曾賺 · 紅柱 = 最多曾賠 · 白點 = 實際拿到（點）· 獲利單賺到手 ${fmtPct(ex.mfe_capture_pct)} · ${ex.with_mfe} / ${d?.trade_count} 筆有資料` : undefined}
+        hint={ex ? `綠柱 = 最多曾賺 · 紅柱 = 最多曾賠 · 白點 = 實際拿到（點）· 獲利單賺到手 ${fmtPct(ex.mfe_capture_pct)} · ${ex.with_mfe} / ${d?.row_count} 筆有資料` : undefined}
         action={<RecalcButton onDone={onReload} />}
       >
         <ExcursionChart data={ex?.trades ?? []} height={220} />

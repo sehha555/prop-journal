@@ -93,8 +93,11 @@ def raw_summary(trades: list[dict]) -> dict:
 
 
 def compute(trades: list[dict]) -> dict:
-    wins = [t["pnl"] for t in trades if t["pnl"] > 0]
-    losses = [t["pnl"] for t in trades if t["pnl"] < 0]
+    # 勝率 / 賺賠 / PF 都用合併後的進出次數算，跟「賺的單 vs 賠的單」那張表同一個基準；
+    # row_count 是原始成交筆數，只給 MFE 有資料比例當分母
+    ps = positions(trades)
+    wins = [p["pnl"] for p in ps if p["pnl"] > 0]
+    losses = [p["pnl"] for p in ps if p["pnl"] < 0]
     gross_win, gross_loss = sum(wins), -sum(losses)
     eq = equity_curve(trades)
     tilt = [t["pnl"] for t in trades if t["tilt"]]
@@ -103,8 +106,9 @@ def compute(trades: list[dict]) -> dict:
         "tilt_pnl": round(sum(tilt), 2),
         "r_coverage": r_coverage(trades),
         "total_pnl": round(sum(t["pnl"] for t in trades), 2),
-        "trade_count": len(trades),
-        "win_rate": round(len(wins) / len(trades) * 100, 1) if trades else None,
+        "trade_count": len(ps),
+        "row_count": len(trades),
+        "win_rate": round(len(wins) / len(ps) * 100, 1) if ps else None,
         "profit_factor": round(gross_win / gross_loss, 2) if gross_loss else None,
         "avg_win": round(mean(wins), 2) if wins else None,
         "avg_loss": round(mean(losses), 2) if losses else None,

@@ -134,7 +134,8 @@ export interface RawSummary {
 export interface PerformanceStats {
   r_coverage: RCoverage;
   total_pnl: number;
-  trade_count: number;
+  trade_count: number; // 合併後的進出次數
+  row_count: number; // 原始成交筆數
   win_rate: number | null;
   profit_factor: number | null;
   avg_win: number | null;
