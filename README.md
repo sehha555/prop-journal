@@ -1,6 +1,6 @@
 # prop-journal
 
-期貨 prop firm 交易日誌：跨帳戶績效、payout 減費用的真實淨利、以 R 為單位的 consistency 統計。
+期貨 prop firm 交易日誌：跨帳戶績效、payout 減費用的真實淨利、分批合併後的賺賠與執行習慣統計。
 
 ## 使用
 
@@ -14,7 +14,7 @@
 
 1. TopstepX → Trades 分頁 → EXPORT 匯出 CSV
 2. 交易頁選帳戶、拖入 CSV
-3. 每筆補「計畫停損（點數）」和 setup 標籤，沒補的只算 $ 不算 R
+3. 需要時補「計畫停損（點數）」、上頭標記與備註；沒補停損的單用預設 $400 判斷保本出場
 
 ## 換 prop firm
 

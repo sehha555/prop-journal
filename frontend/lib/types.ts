@@ -54,12 +54,6 @@ export interface Expense {
   note: string | null;
 }
 
-export interface Setup {
-  id: number;
-  name: string;
-  description: string | null;
-}
-
 export interface EquityPoint {
   date: string;
   cum_pnl: number;
@@ -87,18 +81,7 @@ export interface Dashboard {
   accounts: DashboardAccount[];
   totals: { spent: number; monthly_recurring: number; paid_out: number; net: number };
   equity: EquityPoint[];
-  month: {
-    expectancy_r: number | null;
-    sqn: number | null;
-    blown_r_count: number;
-    missing_r_count: number;
-  };
   last_import_at: string | null;
-}
-
-export interface RCoverage {
-  total: number;
-  with_r: number;
 }
 
 export interface StatsFilter {
@@ -132,7 +115,6 @@ export interface RawSummary {
 }
 
 export interface PerformanceStats {
-  r_coverage: RCoverage;
   total_pnl: number;
   trade_count: number; // 合併後的進出次數
   row_count: number; // 原始成交筆數
@@ -147,6 +129,13 @@ export interface PerformanceStats {
   tilt_count: number;
   tilt_pnl: number;
   raw: RawSummary;
+  habits: {
+    daily_pnl_std: number | null;
+    daily_pnl_mean: number | null;
+    avg_trades_win_day: number | null;
+    avg_trades_loss_day: number | null;
+    revenge_size_ratio: number | null;
+  };
   excursion: {
     with_mfe: number;
     with_mae: number;
@@ -178,32 +167,12 @@ export interface SliceRow {
   trade_count: number;
   win_rate: number | null;
   pnl: number;
-  avg_r: number | null;
 }
 
 export interface SessionStats {
-  r_coverage: RCoverage;
   by_session: SliceRow[];
   by_weekday: SliceRow[];
   by_hour: SliceRow[];
-  by_setup: SliceRow[];
-}
-
-export interface ConsistencyStats {
-  r_coverage: RCoverage;
-  expectancy_r: number | null;
-  r_std: number | null;
-  sqn: number | null;
-  sqn_grade: string | null;
-  daily_pnl_std: number | null;
-  daily_pnl_mean: number | null;
-  r_histogram: { bucket: string; count: number }[];
-  rolling_expectancy: { trade_id: number; exit_time: string; value: number }[];
-  blown_r: Trade[];
-  setup_r_std: { setup: string; r_std: number | null; trade_count: number }[];
-  avg_trades_win_day: number | null;
-  avg_trades_loss_day: number | null;
-  revenge_size_ratio: number | null;
 }
 
 export type ContractInfo = Record<string, { point_value: number; fees: number; commissions: number }>;

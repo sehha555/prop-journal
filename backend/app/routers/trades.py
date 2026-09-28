@@ -14,9 +14,9 @@ router = APIRouter(prefix="/api/trades", tags=["trades"])
 
 
 @router.get("")
-def list_trades(f: Filters = Depends(), missing_r: int = 0):
+def list_trades(f: Filters = Depends()):
     with get_conn() as c:
-        return fetch_trades(c, f, missing_r=bool(missing_r))
+        return fetch_trades(c, f)
 
 
 @router.post("")

@@ -1,25 +1,22 @@
 "use client";
 // 交易頁：匯入區 + 表格 + 右側 journal 欄
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import ErrorBar from "@/components/ui/ErrorBar";
 import Empty from "@/components/ui/Empty";
 import JournalDrawer from "@/components/JournalDrawer";
 import TradeModal from "@/components/TradeModal";
 import { apiGet, apiUpload, errorMessage, filterQuery } from "@/lib/api";
-import { fmtMoney, fmtNyTime, fmtR, pnlColor, SESSION_LABEL } from "@/lib/format";
+import { fmtMoney, fmtNyTime, pnlColor, SESSION_LABEL } from "@/lib/format";
 import type { ImportResult, Trade } from "@/lib/types";
 import { useAppStore, useEnsureAccounts } from "@/store";
 import { useLoader } from "@/lib/useLoader";
 
 export default function TradesView() {
-  const params = useSearchParams();
   const { accounts, loadAccounts } = useAppStore();
   const accErr = useEnsureAccounts();
   const [notice, setNotice] = useState<string | null>(null);
   const [filterAccount, setFilterAccount] = useState<number | null>(null);
-  const [missingOnly, setMissingOnly] = useState(params.get("missing_r") === "1");
   const [importName, setImportName] = useState("");
   const [importing, setImporting] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -30,10 +27,8 @@ export default function TradesView() {
   const importAccount = importName || ((accounts.find((a) => a.status === "active") ?? accounts[0])?.name ?? "");
 
   const { data: trades, setData: setTrades, error: err, setError: setErr, reload: load } = useLoader(() => {
-    const q = filterQuery({ account_id: filterAccount });
-    const qs = missingOnly ? (q ? `${q}&missing_r=1` : "?missing_r=1") : q;
-    return apiGet<Trade[]>(`/trades${qs}`);
-  }, [filterAccount, missingOnly]);
+    return apiGet<Trade[]>(`/trades${filterQuery({ account_id: filterAccount })}`);
+  }, [filterAccount]);
 
   const onFile = async (file: File | null) => {
     if (!file || !importAccount) return;
@@ -82,25 +77,18 @@ export default function TradesView() {
     return a ? `${a.firm} · ${a.name}` : `#${id}`;
   };
 
-  const missingCount = trades?.filter((t) => t.r_multiple === null && t.symbol_root !== null).length ?? 0;
-
   return (
     <>
       <PageHeader
         title="交易"
-        subtitle={trades ? `${trades.length} 筆 · ${missingCount} 筆未補停損` : "載入中…"}
+        subtitle={trades ? `${trades.length} 筆` : "載入中…"}
         actions={
-          <>
-            <select className="input" value={filterAccount ?? ""} onChange={(e) => setFilterAccount(e.target.value ? Number(e.target.value) : null)}>
-              <option value="">全部帳戶</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>{a.firm} · {a.name}</option>
-              ))}
-            </select>
-            <button type="button" className={"btn" + (missingOnly ? " border-gold text-gold" : "")} onClick={() => setMissingOnly((v) => !v)}>
-              只看未補停損
-            </button>
-          </>
+          <select className="input" value={filterAccount ?? ""} onChange={(e) => setFilterAccount(e.target.value ? Number(e.target.value) : null)}>
+            <option value="">全部帳戶</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>{a.firm} · {a.name}</option>
+            ))}
+          </select>
         }
       />
       <ErrorBar message={err ?? accErr} onClose={() => setErr(null)} />
@@ -140,14 +128,11 @@ export default function TradesView() {
                 <th className="py-1.5 pr-2 font-bold">方向</th>
                 <th className="py-1.5 pr-2 font-bold">時段</th>
                 <th className="py-1.5 pr-2 text-right font-bold">P&L</th>
-                <th className="py-1.5 pr-2 text-right font-bold">停損</th>
-                <th className="py-1.5 pr-2 text-right font-bold">R</th>
-                <th className="py-1.5 font-bold">Setup</th>
+                <th className="py-1.5 text-right font-bold">停損</th>
               </tr>
             </thead>
             <tbody className="num">
               {trades?.map((t) => {
-                const missing = t.r_multiple === null;
                 const active = selected?.id === t.id;
                 return (
                   <tr
@@ -167,9 +152,7 @@ export default function TradesView() {
                     <td className={"py-2 pr-2 " + (t.direction === "long" ? "text-green" : "text-red")}>{t.direction === "long" ? "多" : "空"}</td>
                     <td className="py-2 pr-2 text-muted">{t.session ? SESSION_LABEL[t.session] : "—"}</td>
                     <td className={`py-2 pr-2 text-right ${pnlColor(t.pnl)}`}>{fmtMoney(t.pnl, { sign: true, decimals: 2 })}</td>
-                    <td className="py-2 pr-2 text-right">{t.planned_stop_pts ?? <span className="text-gold">待補</span>}</td>
-                    <td className={`py-2 pr-2 text-right ${missing ? "text-faint" : pnlColor(t.r_multiple)}`}>{fmtR(t.r_multiple)}</td>
-                    <td className="py-2 text-muted">{t.setup ?? "—"}</td>
+                    <td className="py-2 text-right text-muted">{t.planned_stop_pts ?? "—"}</td>
                   </tr>
                 );
               })}

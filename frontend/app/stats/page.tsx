@@ -1,22 +1,20 @@
 "use client";
-// 統計：績效 / 時段 / consistency / 月曆四個 tab
+// 統計：績效 / 時段 / 月曆三個 tab
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import ErrorBar from "@/components/ui/ErrorBar";
 import FilterBar from "@/components/FilterBar";
 import { apiGet, errorMessage, filterQuery } from "@/lib/api";
-import type { CalendarDay, ConsistencyStats, PerformanceStats, RCoverage, SessionStats } from "@/lib/types";
+import type { CalendarDay, PerformanceStats, SessionStats } from "@/lib/types";
 import { useAppStore, useEnsureAccounts } from "@/store";
 import PerformanceTab from "./PerformanceTab";
 import SessionsTab from "./SessionsTab";
-import ConsistencyTab from "./ConsistencyTab";
 import CalendarTab from "./CalendarTab";
 
-type Tab = "performance" | "sessions" | "consistency" | "calendar";
+type Tab = "performance" | "sessions" | "calendar";
 const TABS: { key: Tab; label: string }[] = [
   { key: "performance", label: "績效" },
   { key: "sessions", label: "時段" },
-  { key: "consistency", label: "Consistency" },
   { key: "calendar", label: "月曆" },
 ];
 
@@ -27,7 +25,6 @@ export default function StatsPage() {
   const [err, setErr] = useState<string | null>(null);
   const [perf, setPerf] = useState<PerformanceStats | null>(null);
   const [sess, setSess] = useState<SessionStats | null>(null);
-  const [cons, setCons] = useState<ConsistencyStats | null>(null);
   const [cal, setCal] = useState<CalendarDay[] | null>(null);
   const [reloadKey, setReloadKey] = useState(0); // 重算持倉過程後 +1 觸發重抓
 
@@ -39,7 +36,6 @@ export default function StatsPage() {
       try {
         if (tab === "performance") setPerf(await apiGet<PerformanceStats>(`/stats/performance${q}`));
         else if (tab === "sessions") setSess(await apiGet<SessionStats>(`/stats/sessions${q}`));
-        else if (tab === "consistency") setCons(await apiGet<ConsistencyStats>(`/stats/consistency${q}`));
         else setCal((await apiGet<{ days: CalendarDay[] }>(`/stats/calendar${q}`)).days);
         if (!cancelled) setErr(null);
       } catch (e) {
@@ -51,10 +47,6 @@ export default function StatsPage() {
       cancelled = true;
     };
   }, [tab, filter, reloadKey]);
-
-  const coverage: RCoverage | undefined =
-    tab === "performance" ? perf?.r_coverage : tab === "sessions" ? sess?.r_coverage : tab === "consistency" ? cons?.r_coverage : undefined;
-  const missing = coverage ? coverage.total - coverage.with_r : 0;
 
   return (
     <>
@@ -81,21 +73,8 @@ export default function StatsPage() {
       />
       <ErrorBar message={err ?? accErr} onClose={() => setErr(null)} />
 
-      {coverage && (
-        <div className="text-[12px] font-semibold text-muted">
-          {coverage.total} 筆交易中 <span className="text-fg">{coverage.with_r} 筆</span>有 R，以下 R 統計只算這 {coverage.with_r} 筆。
-          {missing > 0 && (
-            <>
-              {" "}
-              <a href="/trades/?missing_r=1" className="no-underline">補 {missing} 筆停損 →</a>
-            </>
-          )}
-        </div>
-      )}
-
       {tab === "performance" && <PerformanceTab data={perf} onReload={() => setReloadKey((k) => k + 1)} />}
       {tab === "sessions" && <SessionsTab data={sess} />}
-      {tab === "consistency" && <ConsistencyTab data={cons} />}
       {tab === "calendar" && <CalendarTab days={cal} />}
     </>
   );

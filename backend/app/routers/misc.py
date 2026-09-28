@@ -1,9 +1,9 @@
-"""expenses（含 payout 收入）/ setups / contracts。"""
+"""expenses（含 payout 收入）/ contracts。"""
 
 from fastapi import APIRouter
 
 from ..contracts import POINT_VALUE, ROUND_TRIP_FEES
-from ..models import ExpenseIn, SetupIn
+from ..models import ExpenseIn
 from . import crud
 
 router = APIRouter(prefix="/api", tags=["misc"])
@@ -22,21 +22,6 @@ def create_expense(body: ExpenseIn):
 @router.delete("/expenses/{row_id}")
 def delete_expense(row_id: int):
     return crud.delete_row("expenses", row_id)
-
-
-@router.get("/setups")
-def list_setups():
-    return crud.list_rows("setups", "name")
-
-
-@router.post("/setups")
-def create_setup(body: SetupIn):
-    return crud.insert_row("setups", body.model_dump())
-
-
-@router.delete("/setups/{row_id}")
-def delete_setup(row_id: int):
-    return crud.delete_row("setups", row_id)
 
 
 @router.get("/contracts")

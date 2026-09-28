@@ -1,5 +1,5 @@
 "use client";
-// 總覽：四個總數、帳戶卡、權益曲線、本月 consistency
+// 總覽：四個總數、帳戶卡、權益曲線
 import Link from "next/link";
 import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
@@ -10,7 +10,7 @@ import Empty from "@/components/ui/Empty";
 import AccountModal from "@/components/AccountModal";
 import EquityChart from "@/components/charts/EquityChart";
 import { apiGet, apiSend, errorMessage } from "@/lib/api";
-import { fmtLocal, fmtMoney, fmtNum, fmtPct, fmtR, fmtSigned, pnlColor, STATUS_LABEL } from "@/lib/format";
+import { fmtLocal, fmtMoney, fmtPct, fmtSigned, pnlColor, STATUS_LABEL } from "@/lib/format";
 import type { AccountStatus, Dashboard, DashboardAccount } from "@/lib/types";
 import { useAppStore } from "@/store";
 import { useLoader } from "@/lib/useLoader";
@@ -100,7 +100,6 @@ export default function DashboardPage() {
     }
   };
 
-  const m = data?.month;
   const selected = data?.accounts.find((a) => a.id === selectedId);
   const subtitle = data
     ? `${data.accounts.length} 個帳戶 · 最近匯入 ${data.last_import_at ? fmtLocal(data.last_import_at) : "—"}`
@@ -145,7 +144,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grow grid-cols-[3fr_2fr] gap-3">
+      <div className="grid grow gap-3">
         <div className="card flex flex-col gap-2 px-[18px] py-4">
           <div className="flex items-baseline justify-between">
             <div className="text-[14px] font-bold text-white">權益曲線</div>
@@ -154,31 +153,6 @@ export default function DashboardPage() {
             </div>
           </div>
           <EquityChart data={selected ? selected.curve : (data?.equity ?? [])} />
-        </div>
-        <div className="card flex flex-col gap-2.5 px-[18px] py-4">
-          <div className="text-[14px] font-bold text-white">本月 consistency</div>
-          <div className="flex flex-col gap-2 text-[13px] font-semibold">
-            <div className="flex justify-between">
-              <span className="text-muted">期望值</span>
-              <span className={`num ${pnlColor(m?.expectancy_r)}`}>{fmtR(m?.expectancy_r)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">SQN</span>
-              <span className="num">{fmtNum(m?.sqn, 1)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">爆 R</span>
-              <span className={`num ${m && m.blown_r_count > 0 ? "text-red" : ""}`}>{m ? `${m.blown_r_count} 筆` : "—"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">未補停損</span>
-              {m && m.missing_r_count > 0 ? (
-                <Link href="/trades/?missing_r=1" className="num text-gold no-underline">{m.missing_r_count} 筆 →</Link>
-              ) : (
-                <span className="num">{m ? "0 筆" : "—"}</span>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 

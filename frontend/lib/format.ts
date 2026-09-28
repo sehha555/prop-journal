@@ -20,11 +20,6 @@ export function fmtSigned(v: number | null | undefined, decimals = 0): string {
   return v < 0 ? `-${s}` : `+${s}`;
 }
 
-export function fmtR(v: number | null | undefined): string {
-  if (v === null || v === undefined || Number.isNaN(v)) return "—";
-  return `${v >= 0 ? "+" : ""}${v.toFixed(2)} R`;
-}
-
 export function fmtPct(v: number | null | undefined): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
   // 後端一律回 0-100 的百分比

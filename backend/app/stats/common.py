@@ -16,14 +16,6 @@ def std(xs: list[float]) -> float | None:
     return math.sqrt(sum((x - m) ** 2 for x in xs) / (len(xs) - 1))
 
 
-def r_coverage(trades: list[dict]) -> dict:
-    return {"total": len(trades), "with_r": sum(1 for t in trades if t["r_multiple"] is not None)}
-
-
-def with_r(trades: list[dict]) -> list[dict]:
-    return [t for t in trades if t["r_multiple"] is not None]
-
-
 def daily_pnl(trades: list[dict]) -> dict[str, float]:
     d: dict[str, float] = defaultdict(float)
     for t in trades:
@@ -83,10 +75,8 @@ def best_day_pct(trades: list[dict]) -> float | None:
 
 def slice_stats(trades: list[dict]) -> dict:
     wins = [t["pnl"] for t in trades if t["pnl"] > 0]
-    rs = [t["r_multiple"] for t in with_r(trades)]
     return {
         "trade_count": len(trades),
         "win_rate": round(len(wins) / len(trades) * 100, 1) if trades else None,
         "pnl": round(sum(t["pnl"] for t in trades), 2),
-        "avg_r": round(mean(rs), 2) if rs else None,
     }

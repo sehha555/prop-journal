@@ -76,11 +76,6 @@ class ExpenseIn(BaseModel):
     note: Optional[str] = None
 
 
-class SetupIn(BaseModel):
-    name: str
-    description: Optional[str] = None
-
-
 class Filters(BaseModel):
     account_id: Optional[int] = None
     date_from: Optional[str] = None

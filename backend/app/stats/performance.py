@@ -1,7 +1,12 @@
 """A 基本績效。"""
 
 from ..trades_core import DEFAULT_RISK_USD, parse_iso
-from .common import best_day_pct, daily_pnl, equity_curve, mean, r_coverage
+from collections import defaultdict
+
+from .common import best_day_pct, daily_pnl, equity_curve, mean, std
+
+REVENGE_AFTER_LOSSES = 2
+REVENGE_LOOKBACK = 20
 
 
 
@@ -71,6 +76,38 @@ def positions(trades: list[dict]) -> list[dict]:
     return [{"pnl": p["pnl"], "size": p["size"], "pts": p["pts_x_size"] / p["size"]} for p in out]
 
 
+def revenge_size_ratio(trades: list[dict]) -> float | None:
+    """連賠 N 筆後下一筆 size / 前 M 筆平均 size，取所有事件的平均。"""
+    ratios = []
+    streak = 0
+    for i, t in enumerate(trades):
+        if streak >= REVENGE_AFTER_LOSSES:
+            prev = trades[max(0, i - REVENGE_LOOKBACK) : i]
+            base = mean([p["size"] for p in prev])
+            if base:
+                ratios.append(t["size"] / base)
+        streak = streak + 1 if t["pnl"] < 0 else 0
+    return round(mean(ratios), 2) if ratios else None
+
+
+def habits(trades: list[dict]) -> dict:
+    """執行習慣：每日損益波動、賺錢日 / 賠錢日各做幾筆、連賠後有沒有加大口數。"""
+    days = daily_pnl(trades)
+    per_day_count = defaultdict(int)
+    for t in trades:
+        per_day_count[t["ny_date"]] += 1
+    win_days = [per_day_count[d] for d, p in days.items() if p > 0]
+    loss_days = [per_day_count[d] for d, p in days.items() if p < 0]
+    dvals = list(days.values())
+    return {
+        "daily_pnl_std": round(std(dvals), 2) if std(dvals) is not None else None,
+        "daily_pnl_mean": round(mean(dvals), 2) if dvals else None,
+        "avg_trades_win_day": round(mean(win_days), 1) if win_days else None,
+        "avg_trades_loss_day": round(mean(loss_days), 1) if loss_days else None,
+        "revenge_size_ratio": revenge_size_ratio(trades),
+    }
+
+
 def raw_summary(trades: list[dict]) -> dict:
     """不靠 R：賺的單、賠的單各自的平均金額 / 點數 / 口數。分批進場先合併。"""
     ps = positions(trades)
@@ -104,7 +141,6 @@ def compute(trades: list[dict]) -> dict:
     return {
         "tilt_count": len(tilt),
         "tilt_pnl": round(sum(tilt), 2),
-        "r_coverage": r_coverage(trades),
         "total_pnl": round(sum(t["pnl"] for t in trades), 2),
         "trade_count": len(ps),
         "row_count": len(trades),
@@ -118,6 +154,7 @@ def compute(trades: list[dict]) -> dict:
         "best_day_pct": best_day_pct(trades),
         "excursion": excursion(trades),
         "raw": raw_summary(trades),
+        "habits": habits(trades),
         "equity": eq,
         "daily": [{"date": d, "pnl": round(v, 2)} for d, v in daily_pnl(trades).items()],
     }

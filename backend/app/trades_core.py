@@ -89,10 +89,8 @@ def where_clause(f: Filters) -> tuple[str, list]:
     return sql, params
 
 
-def fetch_trades(conn: sqlite3.Connection, f: Filters, missing_r: bool = False) -> list[dict]:
+def fetch_trades(conn: sqlite3.Connection, f: Filters) -> list[dict]:
     sql, params = where_clause(f)
-    if missing_r:
-        sql += (" AND " if sql else " WHERE ") + "r_multiple IS NULL"
     rows = [dict(r) for r in conn.execute(f"SELECT * FROM trades{sql} ORDER BY exit_time", params)]
     if f.date_from or f.date_to:
         out = []

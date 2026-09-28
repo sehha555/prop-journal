@@ -1,5 +1,5 @@
 "use client";
-// 績效分頁：原始數字表 + 7 張卡 + 權益曲線 / 每日 P&L / 持倉過程圖
+// 績效分頁：原始數字表 + 7 張卡 + 執行習慣 + 權益曲線 / 每日 P&L / 持倉過程圖
 import { useState } from "react";
 import StatCard from "@/components/ui/StatCard";
 import EquityChart from "@/components/charts/EquityChart";
@@ -89,6 +89,7 @@ function RawTable({ raw }: { raw: RawSummary | undefined }) {
 export default function PerformanceTab({ data, onReload }: { data: PerformanceStats | null; onReload: () => void }) {
   const d = data;
   const ex = d?.excursion;
+  const h = d?.habits;
   return (
     <>
       <RawTable raw={d?.raw} />
@@ -106,6 +107,18 @@ export default function PerformanceTab({ data, onReload }: { data: PerformanceSt
         } />
         <StatCard size="md" label="上頭的單" value={d ? String(d.tilt_count) : "—"} valueClass={d?.tilt_count ? "text-red" : undefined} hint={d?.tilt_count ? `合計 ${fmtMoney(d.tilt_pnl, { sign: true })}` : "編輯交易時勾「上頭」"} />
         <StatCard size="md" label="保本出場" value={ex ? String(ex.be_count) : "—"} hint={ex?.be_avg_mfe_pts != null ? `只小賠（不到計畫風險一半）的單；這些單平均曾賺 ${ex.be_avg_mfe_pts} 點` : "只小賠（不到計畫風險一半）的單"} />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard size="md" label="每日 P&L 標準差" value={fmtMoney(h?.daily_pnl_std)} hint={h ? `日均 ${fmtMoney(h.daily_pnl_mean, { sign: true })}` : undefined} />
+        <StatCard size="md" label="賺錢日 / 賠錢日 平均筆數" value={
+          <span>
+            {fmtNum(h?.avg_trades_win_day, 1)} /{" "}
+            <span className={h && h.avg_trades_loss_day !== null && h.avg_trades_win_day !== null && h.avg_trades_loss_day > h.avg_trades_win_day ? "text-red" : ""}>
+              {fmtNum(h?.avg_trades_loss_day, 1)}
+            </span>
+          </span>
+        } hint="賠錢日做比較多筆 = 可能在追" />
+        <StatCard size="md" label="連賠 2 筆後下一筆口數" value={h?.revenge_size_ratio != null ? `${h.revenge_size_ratio.toFixed(1)}× 平常` : "—"} valueClass={h?.revenge_size_ratio != null && h.revenge_size_ratio > 1.2 ? "text-red" : undefined} hint="> 1.2× 標紅" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Panel title="權益曲線" hint="每日累積">
